@@ -1,0 +1,4 @@
+Remove class imbalance
+Check reshaped images
+Randomise current image
+
