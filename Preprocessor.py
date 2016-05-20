@@ -1,10 +1,9 @@
 import numpy as np
 import pandas as pd
-from skimage import io
+from skimage import io, draw
 from skimage.util import img_as_float, img_as_ubyte
 import os
 import glob
-
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
@@ -47,7 +46,8 @@ def load_next_img(data,mask_data,gt_data):
     else:
         print 'No more images left in set'
         return False
-df = pd.DataFrame(columns = np.arange(patch_dim**2*3+1))
+df = pd.DataFrame(index=np.arange(total_patches), columns = np.arange(patch_dim**2*3+1))
+
 def save_img_data(data, mask_data, gt_data):
     count = 0
     global df
@@ -61,13 +61,47 @@ def save_img_data(data, mask_data, gt_data):
             df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
             df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
             count +=1
-            if count%100 ==0:
-                print "%d patches extracted"%count
-
-
+            if count%100==0:
+                    print '%d patches extracted'%count
+'''
+def save_img_data(data, mask_data, gt_data):
+    count = 0
+    row_step = col_step = int(np.ceil(np.sqrt(0.7*current_mask.shape[0]*current_mask.shape[1]/(1.0*patches_per_image))) )   
+    #print 'steps = %d'%row_step
+    h = (patch_dim-1)/2
+    i = h+1
+    while i<current_mask.shape[0]-h-1-row_step :
+        j = h+1
+        while j<current_mask.shape[1]-h+1-col_step and count<patches_per_image:
+            p = np.random.randint(0,row_step)
+            q = np.random.randint(0,col_step)
+            #print 'i = %d, j = %d, count = %d'%(i,j,count)
+            #print 'p= %d, q = %d'%(p,q)
+            if current_mask[i+p-h,j+q-h]==current_mask[i+p-h,j+q+h]== current_mask[i+p+h,j+q-h] == current_mask[i+p+h,j+q+h]>0.99: #To avoid floating point comparison
+                ind = current_img_index*patches_per_image+count
+                df.loc[ind] = np.arange(patch_dim**2*3+1)
+                df.loc[ind][0:-1] = np.reshape(current_img[i+p-h:i+p+h+1,j+q-h:j+q+h+1], -1)
+                df.loc[ind][patch_dim**2*3] = int(current_gt[i+p,j+q])
+                count +=1
+                if count%100==0:
+                    print '%d patches extracted'%count
+            
+            j+=row_step
+        i+=col_step
+    print count
+    while count < patches_per_image:
+        i = np.random.randint(50,current_img.shape[0]-50)
+        j = np.random.randint(50,current_img.shape[1]-50)
+        h = (patch_dim - 1)/2
+        if current_mask[i-h,j-h]==current_mask[i-h,j+h]== current_mask[i+h,j-h] == current_mask[i+h,j+h]>0.99: #To avoid floating point comparison
+            ind = current_img_index*patches_per_image+count
+            df.loc[ind] = np.arange(patch_dim**2*3+1)
+            df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
+            df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
+            count +=1
+'''
 while load_next_img(train, mask_train, gt_train):
     save_img_data(train,mask_train, gt_train)
-
 
 last = len(df.columns) -1
 mean_img = np.mean(df)[:-1]
@@ -78,5 +112,5 @@ mean_normalised_df[last] = labels
 mean_normalised_df = mean_normalised_df.iloc[np.random.permutation(len(df))]
 mean_normalised_df = mean_normalised_df.reset_index(drop=True)
 
-mean_normalised_df.to_pickle('../Data/mean_normalised_df.pkl')
+mean_normalised_df.to_pickle('../Data/mean_normalised_df2.pkl')
 
