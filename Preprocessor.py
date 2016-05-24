@@ -1,9 +1,18 @@
+
+# coding: utf-8
+
+# In[1]:
+
 import numpy as np
 import pandas as pd
 from skimage import io, draw
 from skimage.util import img_as_float, img_as_ubyte
+get_ipython().magic(u'matplotlib inline')
 import os
 import glob
+
+
+# In[2]:
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
@@ -20,8 +29,11 @@ def get_path(directory):
 train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
 test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
 
+
+# In[3]:
+
 # Hyper Params
-total_patches = 60000
+total_patches = 600
 num_training_images = len(train)
 patches_per_image = total_patches/num_training_images
 patch_dim = 31                          # Dimension of window used for training
@@ -30,6 +42,9 @@ current_img_index = -1                   # Index of the current image in 'train'
 current_img = io.imread(train[0])    
 current_mask = img_as_float(io.imread(mask_train[0]))
 current_gt = img_as_float(io.imread(gt_train[0]))
+
+
+# In[4]:
 
 # When we have extracted 'patches_per_image' number of patches from our current image
 # we call this function to change the current image
@@ -46,7 +61,7 @@ def load_next_img(data,mask_data,gt_data):
     else:
         print 'No more images left in set'
         return False
-df = pd.DataFrame(index=np.arange(total_patches), columns = np.arange(patch_dim**2*3+1))
+df = pd.DataFrame(columns = np.arange(patch_dim**2*3+1))
 
 def save_img_data(data, mask_data, gt_data):
     count = 0
@@ -61,11 +76,12 @@ def save_img_data(data, mask_data, gt_data):
             df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
             df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
             count +=1
-            if count%100==0:
-                    print '%d patches extracted'%count
 '''
 def save_img_data(data, mask_data, gt_data):
     count = 0
+    #grid_length = np.floor(np.sqrt(patches_per_image))
+    #print 'grid length = %d'%grid_length
+    
     row_step = col_step = int(np.ceil(np.sqrt(0.7*current_mask.shape[0]*current_mask.shape[1]/(1.0*patches_per_image))) )   
     #print 'steps = %d'%row_step
     h = (patch_dim-1)/2
@@ -83,12 +99,10 @@ def save_img_data(data, mask_data, gt_data):
                 df.loc[ind][0:-1] = np.reshape(current_img[i+p-h:i+p+h+1,j+q-h:j+q+h+1], -1)
                 df.loc[ind][patch_dim**2*3] = int(current_gt[i+p,j+q])
                 count +=1
-                if count%100==0:
-                    print '%d patches extracted'%count
             
             j+=row_step
         i+=col_step
-    print count
+    #print count
     while count < patches_per_image:
         i = np.random.randint(50,current_img.shape[0]-50)
         j = np.random.randint(50,current_img.shape[1]-50)
@@ -100,8 +114,15 @@ def save_img_data(data, mask_data, gt_data):
             df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
             count +=1
 '''
+
+
+# In[5]:
+
 while load_next_img(train, mask_train, gt_train):
     save_img_data(train,mask_train, gt_train)
+
+
+# In[6]:
 
 last = len(df.columns) -1
 mean_img = np.mean(df)[:-1]
@@ -109,8 +130,15 @@ labels = df[last]
 mean_normalised_df = df - np.mean(df)
 mean_normalised_df[last] = labels
 
+
+# In[7]:
+
 mean_normalised_df = mean_normalised_df.iloc[np.random.permutation(len(df))]
 mean_normalised_df = mean_normalised_df.reset_index(drop=True)
 
-mean_normalised_df.to_pickle('../Data/mean_normalised_df2.pkl')
+
+# In[9]:
+
+mean_normalised_df.to_pickle('../Data/mean_normalised_df.pkl')
+mean_img.to_pickle('../Data/mean_img.pkl')
 
