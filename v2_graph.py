@@ -1,19 +1,24 @@
+
+# coding: utf-8
+
+# In[1]:
+
+from __future__ import division
 import numpy as np
 import pandas as pd
 import os
 import glob
 import tensorflow as tf
-from skimage import io
-from skimage.util import img_as_float, img_as_ubyte
-import matplotlib.cm as cm
-from matplotlib import pyplot as plt
-
-from __future__ import division
+#from skimage import io
+#from skimage.util import img_as_float, img_as_ubyte
+#import matplotlib.cm as cm
+#from matplotlib import pyplot as plt
+#%matplotlib inline
 import time
 from six.moves import xrange 
 
 
-# In[119]:
+# In[2]:
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
@@ -31,13 +36,13 @@ train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
 test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
 
 
-# In[120]:
+# In[3]:
 
 data = pd.read_pickle('../Data/mean_normalised_df.pkl') 
 mean_img = pd.read_pickle('../Data/mean_img.pkl')
 
 
-# In[121]:
+# In[4]:
 
 # Hyper Params
 TOTAL_PATCHES = len(data)
@@ -47,17 +52,17 @@ PATCH_DIM = 31
 BATCH_SIZE = 60
 LEARNING_RATE = 5e-4
 TRAINING_PROP = 0.8
-MAX_STEPS = int((TOTAL_PATCHES*TRAINING_PROP)/BATCH_SIZE)
+MAX_STEPS = 1000
 print PATCHES_PER_IMAGE
 print MAX_STEPS
 
 NUM_CLASSES = 2
 
 
-# In[122]:
+# In[5]:
 
 def next_batch(size, df, current_batch_ind):
-    """Returns the next mini batch of data from the dtaset passed
+    """Returns the next mini batch of data from the dataset passed
     
     Args:
         size: length of the current requested mini batch
@@ -66,25 +71,30 @@ def next_batch(size, df, current_batch_ind):
     
     Returns:
         (batch_x, batch_y): A tuple of np arrays of dimensions 
-                        [size, patch_dim**2*3] and [size, 1] respectively
-        flag: True if no more data left in the data set, else False        
+                        [size, patch_dim**2*3] and [size, NUM_CLASSES] respectively 
+        current_batch_ind: the updated current position of the index in the dataset
+        df: when the requested batch_size+current_batch_ind is more than the length of the data set,
+            the data is shuffled again and current_batch_ind is reset to 0, and this new data set is
+            returned
     
     """
-    flag = False
+    
     if current_batch_ind + size> len(df):
-        print 'Next batch cannot be called because of insufficient remaining data'
-        flag = True
-    else:
-        batch_x = np.zeros((size, PATCH_DIM**2*3))
-        batch_y = np.zeros((size,2), dtype = 'uint8')
-        for i in range(current_batch_ind, current_batch_ind+size):
-            batch_x[i - current_batch_ind] = df.loc[i][:-1]
-            batch_y[i - current_batch_ind][int(df.loc[i][PATCH_DIM**2*3])]=1
-        #current_batch_ind += size  # Should be done immediately after the function 
-    return (batch_x, batch_y), flag
+        current_batch_ind = 0
+        df = df.iloc[np.random.permutation(len(df))]
+        df = df.reset_index(drop=True)
+        
+    batch_x = np.zeros((size, PATCH_DIM**2*3))
+    batch_y = np.zeros((size, NUM_CLASSES), dtype = 'uint8')
+    for i in range(current_batch_ind, current_batch_ind+size):
+        batch_x[i - current_batch_ind] = df.loc[i][:-1]
+        batch_y[i - current_batch_ind][int(df.loc[i][PATCH_DIM**2*3])]=1
+        
+    current_batch_ind += size  
+    return (batch_x, batch_y), current_batch_ind, df
 
 
-# In[123]:
+# In[6]:
 
 def inference(images, keep_prob, fc_hidden_units1=512):
     """ Builds the model as far as is required for running the network
@@ -99,7 +109,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     """
     with tf.variable_scope('h_conv1') as scope:
         weights = tf.get_variable('weights', shape=[4, 4, 3, 64], 
-                                  initializer=tf.contrib.layers.xavier_initializer())
+                                  initializer=tf.contrib.layers.xavier_initializer_conv2d())
         biases = tf.get_variable('biases', shape=[64])
         
         # Flattening the 3D image into a 1D array
@@ -145,7 +155,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     return logits
 
 
-# In[124]:
+# In[7]:
 
 def calc_loss(logits, labels):
     """Calculates the loss from the logits and the labels.
@@ -161,7 +171,7 @@ def calc_loss(logits, labels):
     return loss
 
 
-# In[125]:
+# In[8]:
 
 def training(loss, learning_rate=5e-4):
     """Sets up the training Ops.
@@ -187,7 +197,7 @@ def training(loss, learning_rate=5e-4):
     return train_op
 
 
-# In[126]:
+# In[9]:
 
 def evaluation(logits, labels, topk=1):
     """Evaluate the quality of the logits at predicting the label.
@@ -210,7 +220,7 @@ def evaluation(logits, labels, topk=1):
     return tf.reduce_sum(tf.cast(correct, tf.int32))
 
 
-# In[127]:
+# In[10]:
 
 def placeholder_inputs(batch_size):
     """Generate placeholder variables to represent the input tensors.
@@ -231,10 +241,10 @@ def placeholder_inputs(batch_size):
     return images_placeholder, labels_placeholder
 
 
-# In[128]:
+# In[11]:
 
 #UPDATE current_img_ind
-def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size=60):
+def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
     """Fills the feed_dict for training the given step.
     A feed_dict takes the form of:
     feed_dict = {
@@ -245,24 +255,26 @@ def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size=6
         data_set: The set of images and labels, from input_data.read_data_sets()
         images_pl: The images placeholder, from placeholder_inputs().
         labels_pl: The labels placeholder, from placeholder_inputs().
+        current_img_ind: The current position of the index in the dataset
     Returns:
         feed_dict: The feed dictionary mapping from placeholders to values.
+        current_img_ind: The updated position of the index in the dataset
+        data_set: updated data_set
     """
     # Create the feed_dict for the placeholders filled with the next
     # `batch size ` examples.
-    batch, flag = next_batch(batch_size, data_set, current_img_ind)
-    if flag:
-        return None, current_img_ind+batch_size
+    batch, current_img_ind, data_set= next_batch(batch_size, data_set, current_img_ind)
+
     feed_dict = {
       images_pl: batch[0],
       labels_pl: batch[1],
     }
-    return feed_dict, current_img_ind+batch_size
+    return feed_dict, current_img_ind, data_set
 
 
-# In[129]:
+# In[12]:
 
-def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size=60):
+def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size):
     """Runs one evaluation against the full epoch of data.
     Args:
         sess: The session in which the model has been trained.
@@ -276,9 +288,9 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
     true_count = 0  # Counts the number of correct predictions.
     steps_per_epoch = len(data_set) // batch_size
     num_examples = steps_per_epoch * batch_size
-    current_img_ind =0
+    current_img_ind = 0
     for step in xrange(steps_per_epoch):
-        feed_dict, current_img_ind = fill_feed_dict(data_set, images_placeholder,
+        feed_dict, current_img_ind, data_set = fill_feed_dict(data_set, images_placeholder,
                                labels_placeholder, current_img_ind, batch_size)
         true_count += sess.run(eval_correct, feed_dict=feed_dict)
     precision = true_count / num_examples
@@ -286,7 +298,7 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
             (num_examples, true_count, precision))
 
 
-# In[130]:
+# In[13]:
 
 def run_training():
     """Train for a number of steps."""
@@ -334,7 +346,7 @@ def run_training():
 
             # Fill a feed dictionary with the actual set of images and labels
             # for this particular training step.
-            feed_dict, current_img_ind = fill_feed_dict(train_data,
+            feed_dict, current_img_ind, train_data = fill_feed_dict(train_data,
                                  images_placeholder,
                                  labels_placeholder, current_img_ind=current_img_ind, 
                                                         batch_size=BATCH_SIZE)
@@ -360,14 +372,22 @@ def run_training():
                 #summary_writer.flush()
 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % 3 == 0 or (step + 1) == MAX_STEPS:
+            if (step + 1) % (10) == 0 or (step + 1) == MAX_STEPS:
                 #saver.save(sess, '../Data/', global_step=step)
                 # Evaluate against the training set.
                 print('Training Data Eval:')
-                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data)
+                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE)
                 # Evaluate against the validation set.
                 print('Validation Data Eval:')
-                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data)
+                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE)
+
+
+# In[ ]:
 
 run_training()
+
+
+# In[ ]:
+
+
 
