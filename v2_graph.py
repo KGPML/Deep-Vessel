@@ -22,12 +22,15 @@ from six.moves import xrange
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
+    imgs.sort()
     #a = [x.split('/')[-1].split('.')[0] for x in train]
     
     mask = glob.glob(directory + '/mask/*.gif')
+    mask.sort()
     #b = [x.split('/')[-1].split('.')[0] for x in mask]
     
     gt = glob.glob(directory + '/1st_manual/*.gif')
+    gt.sort()
     #c = [x.split('/')[-1].split('.')[0] for x in gt]
     
     return map(os.path.abspath, imgs), map(os.path.abspath, mask), map(os.path.abspath, gt)
@@ -38,8 +41,8 @@ test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
 
 # In[3]:
 
-data = pd.read_pickle('../Data/mean_normalised_df.pkl') 
-mean_img = pd.read_pickle('../Data/mean_img.pkl')
+data = pd.read_pickle('../Data/mean_normalised_df_no_class_bias.pkl') 
+mean_img = pd.read_pickle('../Data/mean_img_no_class_bias.pkl')
 
 
 # In[4]:
@@ -52,7 +55,7 @@ PATCH_DIM = 31
 BATCH_SIZE = 60
 LEARNING_RATE = 5e-4
 TRAINING_PROP = 0.8
-MAX_STEPS = 1000
+MAX_STEPS = 200
 print PATCHES_PER_IMAGE
 print MAX_STEPS
 
@@ -110,7 +113,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     with tf.variable_scope('h_conv1') as scope:
         weights = tf.get_variable('weights', shape=[4, 4, 3, 64], 
                                   initializer=tf.contrib.layers.xavier_initializer_conv2d())
-        biases = tf.get_variable('biases', shape=[64])
+        biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.05))
         
         # Flattening the 3D image into a 1D array
         x_image = tf.reshape(images, [-1,PATCH_DIM,PATCH_DIM,3])
@@ -118,8 +121,8 @@ def inference(images, keep_prob, fc_hidden_units1=512):
         h_conv1 = tf.nn.relu(z+biases, name=scope.name)
     with tf.variable_scope('h_conv2') as scope:
         weights = tf.get_variable('weights', shape=[4, 4, 64, 64], 
-                                  initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable('biases', shape=[64])
+                                  initializer=tf.contrib.layers.xavier_initializer_conv2d())
+        biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.05))
         z = tf.nn.conv2d(h_conv1, weights, strides=[1, 1, 1, 1], padding='SAME')
         h_conv2 = tf.nn.relu(z+biases, name=scope.name)
     
@@ -128,8 +131,8 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     
     with tf.variable_scope('h_conv3') as scope:
         weights = tf.get_variable('weights', shape=[4, 4, 64, 64], 
-                                  initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable('biases', shape=[64])
+                                  initializer=tf.contrib.layers.xavier_initializer_conv2d())
+        biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.05))
         z = tf.nn.conv2d(h_pool1, weights, strides=[1, 1, 1, 1], padding='SAME')
         h_conv3 = tf.nn.relu(z+biases, name=scope.name)
         
@@ -139,7 +142,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     with tf.variable_scope('h_fc1') as scope:
         weights = tf.get_variable('weights', shape=[7**2*64, fc_hidden_units1], 
                                   initializer=tf.contrib.layers.xavier_initializer())
-        biases = tf.get_variable('biases', shape=[fc_hidden_units1])
+        biases = tf.get_variable('biases', shape=[fc_hidden_units1], initializer=tf.constant_initializer(0.05))
         h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
         
         h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases, name = 'h_fc1')
@@ -328,7 +331,7 @@ def run_training():
         #summary_op = tf.merge_all_summaries()
 
         # Create a saver for writing training checkpoints.
-        #saver = tf.train.Saver()
+        saver = tf.train.Saver()
 
         # Create a session for running Ops on the Graph.
         sess = tf.Session()
@@ -363,7 +366,7 @@ def run_training():
             duration = time.time() - start_time
 
             # Write the summaries and print an overview fairly often.
-            if step % 1 == 0:
+            if step % 5 == 0:
                 # Print status to stdout.
                 print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
                 # Update the events file.
@@ -372,8 +375,8 @@ def run_training():
                 #summary_writer.flush()
 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % (10) == 0 or (step + 1) == MAX_STEPS:
-                #saver.save(sess, '../Data/', global_step=step)
+            if (step + 1) % (50) == 0 or (step + 1) == MAX_STEPS:
+                saver.save(sess, '../Data/model.ckpt')
                 # Evaluate against the training set.
                 print('Training Data Eval:')
                 do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE)
@@ -382,7 +385,7 @@ def run_training():
                 do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE)
 
 
-# In[ ]:
+# In[14]:
 
 run_training()
 
