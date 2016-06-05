@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[3]:
 
 import numpy as np
 import pandas as pd
@@ -12,16 +12,19 @@ import os
 import glob
 
 
-# In[2]:
+# In[4]:
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
+    imgs.sort()
     #a = [x.split('/')[-1].split('.')[0] for x in train]
     
     mask = glob.glob(directory + '/mask/*.gif')
+    mask.sort()
     #b = [x.split('/')[-1].split('.')[0] for x in mask]
     
     gt = glob.glob(directory + '/1st_manual/*.gif')
+    gt.sort()
     #c = [x.split('/')[-1].split('.')[0] for x in gt]
     
     return map(os.path.abspath, imgs), map(os.path.abspath, mask), map(os.path.abspath, gt)
@@ -30,7 +33,7 @@ train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
 test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
 
 
-# In[3]:
+# In[27]:
 
 # Hyper Params
 total_patches = 600
@@ -42,9 +45,10 @@ current_img_index = -1                   # Index of the current image in 'train'
 current_img = io.imread(train[0])    
 current_mask = img_as_float(io.imread(mask_train[0]))
 current_gt = img_as_float(io.imread(gt_train[0]))
+positive_proprtion = 0.5
 
 
-# In[4]:
+# In[28]:
 
 # When we have extracted 'patches_per_image' number of patches from our current image
 # we call this function to change the current image
@@ -64,18 +68,27 @@ def load_next_img(data,mask_data,gt_data):
 df = pd.DataFrame(columns = np.arange(patch_dim**2*3+1))
 
 def save_img_data(data, mask_data, gt_data):
-    count = 0
+    pos_count = 0
+    neg_count = 0
     global df
-    while count < patches_per_image:
-        i = np.random.randint(0,current_img.shape[0])
-        j = np.random.randint(0,current_img.shape[1])
+    # Fill up till one class reaches its limit
+    while pos_count +neg_count < patches_per_image: 
+        i = np.random.randint(patch_dim/2,current_img.shape[0]-patch_dim/2)
+        j = np.random.randint(patch_dim/2,current_img.shape[1]-patch_dim/2)
         h = (patch_dim - 1)/2
         if int(np.sum(current_mask[i-h:i+h+1,j-h:j+h+1])/patch_dim**2) == 1:
-            ind = current_img_index*patches_per_image+count
-            df.loc[ind] = np.arange(patch_dim**2*3+1)
-            df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
-            df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
-            count +=1
+            ind = current_img_index*patches_per_image+pos_count+neg_count
+            if int(current_gt[i,j])==1 and pos_count < positive_proprtion*patches_per_image:
+                df.loc[ind] = np.arange(patch_dim**2*3+1)
+                df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
+                df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
+                pos_count += 1
+            elif int(current_gt[i,j])==0 and neg_count < (1-positive_proprtion)*patches_per_image:
+                df.loc[ind] = np.arange(patch_dim**2*3+1)
+                df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
+                df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
+                neg_count += 1
+        
 '''
 def save_img_data(data, mask_data, gt_data):
     count = 0
@@ -116,13 +129,13 @@ def save_img_data(data, mask_data, gt_data):
 '''
 
 
-# In[5]:
+# In[29]:
 
 while load_next_img(train, mask_train, gt_train):
     save_img_data(train,mask_train, gt_train)
 
 
-# In[6]:
+# In[30]:
 
 last = len(df.columns) -1
 mean_img = np.mean(df)[:-1]
@@ -131,14 +144,41 @@ mean_normalised_df = df - np.mean(df)
 mean_normalised_df[last] = labels
 
 
-# In[7]:
+# In[31]:
 
 mean_normalised_df = mean_normalised_df.iloc[np.random.permutation(len(df))]
 mean_normalised_df = mean_normalised_df.reset_index(drop=True)
 
 
-# In[9]:
+# In[32]:
 
-mean_normalised_df.to_pickle('../Data/mean_normalised_df.pkl')
-mean_img.to_pickle('../Data/mean_img.pkl')
+mean_normalised_df.to_pickle('../Data/mean_normalised_df_no_class_bias.pkl')
+mean_img.to_pickle('../Data/mean_img_no_class_bias.pkl')
+
+
+# In[1]:
+
+from scipy import misc, ndimage
+
+
+# In[13]:
+
+im = misc.imread(train[0])
+type(im)
+
+
+# In[12]:
+
+ig = ndimage.imread(train[0])
+type(ig)
+
+
+# In[15]:
+
+
+
+
+# In[ ]:
+
+
 
