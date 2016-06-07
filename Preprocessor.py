@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[18]:
+# In[1]:
 
 import numpy as np
 import pandas as pd
@@ -13,7 +13,7 @@ import glob
 import time
 
 
-# In[19]:
+# In[2]:
 
 def get_path(directory):
     """ Gets the filenames of all training, mask and ground truth images in the given 
@@ -43,7 +43,7 @@ train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
 test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
 
 
-# In[20]:
+# In[3]:
 
 # Hyper Params
 total_patches = 600
@@ -58,7 +58,7 @@ current_gt = img_as_float(io.imread(gt_train[0]))
 positive_proprtion = 0.5
 
 
-# In[21]:
+# In[4]:
 
 def load_next_img(data,mask_data,gt_data):
     """When we have extracted 'PATCHES_PER_IMAGE' number of patches from our 
@@ -83,15 +83,15 @@ def load_next_img(data,mask_data,gt_data):
         return False
 
 
-# In[22]:
+# In[7]:
 
 begin = time.time()
 print "Creating DataFrame"
-df = pd.DataFrame(columns = np.arange(patch_dim**2*3+1))
+df = pd.DataFrame(index=np.arange(total_patches), columns = np.arange(patch_dim**2*3+1))
 print "Dataframe ready"
 
 
-# In[23]:
+# In[8]:
 
 def save_img_data(data, mask_data, gt_data):
     """Extracts PATCHES_PER_IMAGE number of patches from each image
@@ -117,19 +117,17 @@ def save_img_data(data, mask_data, gt_data):
             
             # If a positive sample is found and positive count hasn't reached its limit
             if int(current_gt[i,j])==1 and pos_count < positive_proprtion*patches_per_image:
-                df.loc[ind] = np.arange(patch_dim**2*3+1)
                 df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
                 df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
                 pos_count += 1
             # If a negative sample is found and negative count hasn't reached its limit
             elif int(current_gt[i,j])==0 and neg_count < (1-positive_proprtion)*patches_per_image:
-                df.loc[ind] = np.arange(patch_dim**2*3+1)
                 df.loc[ind][0:-1] = np.reshape(current_img[i-h:i+h+1,j-h:j+h+1], -1)
                 df.loc[ind][patch_dim**2*3] = int(current_gt[i,j])
                 neg_count += 1
 
 
-# In[24]:
+# In[9]:
 
 while load_next_img(train, mask_train, gt_train):
     start = time.time()
@@ -137,7 +135,7 @@ while load_next_img(train, mask_train, gt_train):
     print "Time taken for this image = %f secs" %( (time.time()-start))
 
 
-# In[25]:
+# In[10]:
 
 print "Mean Normalising"
 last = len(df.columns) -1
@@ -147,21 +145,21 @@ mean_normalised_df = df - np.mean(df)
 mean_normalised_df[last] = labels
 
 
-# In[26]:
+# In[11]:
 
 print "Randomly shuffling the datasets"
 mean_normalised_df = mean_normalised_df.iloc[np.random.permutation(len(df))]
 mean_normalised_df = mean_normalised_df.reset_index(drop=True)
 
 
-# In[27]:
+# In[12]:
 
 print "Writing to pickle"
 mean_normalised_df.to_pickle('../Data/mean_normalised_df_no_class_bias.pkl')
 mean_img.to_pickle('../Data/mean_img_no_class_bias.pkl')
 
 
-# In[28]:
+# In[13]:
 
 print "Total time taken = %f mins" %( (time.time()-begin)/60.0)
 
