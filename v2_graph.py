@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1]:
+# In[17]:
 
 from __future__ import division
 import numpy as np
@@ -16,6 +16,7 @@ import tensorflow as tf
 #%matplotlib inline
 import time
 from six.moves import xrange 
+import shutil
 
 
 # In[2]:
@@ -45,7 +46,7 @@ data = pd.read_pickle('../Data/mean_normalised_df_no_class_bias.pkl')
 mean_img = pd.read_pickle('../Data/mean_img_no_class_bias.pkl')
 
 
-# In[4]:
+# In[28]:
 
 # Hyper Params
 TOTAL_PATCHES = len(data)
@@ -55,7 +56,7 @@ PATCH_DIM = 31
 BATCH_SIZE = 60
 LEARNING_RATE = 5e-4
 TRAINING_PROP = 0.8
-MAX_STEPS = 200
+MAX_STEPS = 100
 print PATCHES_PER_IMAGE
 print MAX_STEPS
 
@@ -99,6 +100,21 @@ def next_batch(size, df, current_batch_ind):
 
 # In[6]:
 
+def variable_summaries(var, name):
+    """Attach a lot of summaries to a Tensor."""
+    with tf.name_scope('summaries'):
+        mean = tf.reduce_mean(var)
+        tf.scalar_summary('mean/' + name, mean)
+        with tf.name_scope('stddev'):
+            stddev = tf.sqrt(tf.reduce_sum(tf.square(var - mean)))
+        tf.scalar_summary('sttdev/' + name, stddev)
+        tf.scalar_summary('max/' + name, tf.reduce_max(var))
+        tf.scalar_summary('min/' + name, tf.reduce_min(var))
+        tf.histogram_summary(name, var)
+
+
+# In[22]:
+
 def inference(images, keep_prob, fc_hidden_units1=512):
     """ Builds the model as far as is required for running the network
     forward to make predictions.
@@ -115,38 +131,71 @@ def inference(images, keep_prob, fc_hidden_units1=512):
                                   initializer=tf.contrib.layers.xavier_initializer_conv2d())
         biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.05))
         
+        variable_summaries(weights, scope.name+'/weights')
+        variable_summaries(biases, scope.name+'/biases')
+        
         # Flattening the 3D image into a 1D array
         x_image = tf.reshape(images, [-1,PATCH_DIM,PATCH_DIM,3])
-        z = tf.nn.conv2d(x_image, weights, strides=[1, 1, 1, 1], padding='VALID')
-        h_conv1 = tf.nn.relu(z+biases, name=scope.name)
+        tf.image_summary('input', x_image, 10)
+        
+        z = tf.nn.conv2d(x_image, weights, strides=[1, 1, 1, 1], padding='VALID') + biases
+        tf.histogram_summary(scope.name + '/pre_activations', z)
+        
+        h_conv1 = tf.nn.relu(z, name=scope.name)
+        tf.histogram_summary(scope.name + '/activations', h_conv1)
+        
     with tf.variable_scope('h_conv2') as scope:
         weights = tf.get_variable('weights', shape=[4, 4, 64, 64], 
                                   initializer=tf.contrib.layers.xavier_initializer_conv2d())
         biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.05))
-        z = tf.nn.conv2d(h_conv1, weights, strides=[1, 1, 1, 1], padding='SAME')
-        h_conv2 = tf.nn.relu(z+biases, name=scope.name)
+        
+        variable_summaries(weights, scope.name+'/weights')
+        variable_summaries(biases, scope.name+'/biases')
+        
+        z = tf.nn.conv2d(h_conv1, weights, strides=[1, 1, 1, 1], padding='SAME')+biases
+        tf.histogram_summary(scope.name + '/pre_activations', z)
+        
+        h_conv2 = tf.nn.relu(z, name=scope.name)
+        tf.histogram_summary(scope.name + '/activations', h_conv2)
     
     h_pool1 = tf.nn.max_pool(h_conv2, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME', name='h_pool1')
+    tf.histogram_summary('h_pool1/activations', h_pool1)
     
     with tf.variable_scope('h_conv3') as scope:
         weights = tf.get_variable('weights', shape=[4, 4, 64, 64], 
                                   initializer=tf.contrib.layers.xavier_initializer_conv2d())
         biases = tf.get_variable('biases', shape=[64], initializer=tf.constant_initializer(0.05))
-        z = tf.nn.conv2d(h_pool1, weights, strides=[1, 1, 1, 1], padding='SAME')
-        h_conv3 = tf.nn.relu(z+biases, name=scope.name)
+        
+        variable_summaries(weights, scope.name+'/weights')
+        variable_summaries(biases, scope.name+'/biases')
+        
+        z = tf.nn.conv2d(h_pool1, weights, strides=[1, 1, 1, 1], padding='SAME')+biases
+        tf.histogram_summary(scope.name + '/pre_activations', z)
+        
+        h_conv3 = tf.nn.relu(z, name=scope.name)
+        tf.histogram_summary(scope.name + '/activations', h_conv3)
         
     h_pool2 = tf.nn.max_pool(h_conv3, ksize=[1, 2, 2, 1],
                         strides=[1, 2, 2, 1], padding='SAME', name='h_pool2')
+    tf.histogram_summary('h_pool2/activations', h_pool2)
+    
     
     with tf.variable_scope('h_fc1') as scope:
         weights = tf.get_variable('weights', shape=[7**2*64, fc_hidden_units1], 
                                   initializer=tf.contrib.layers.xavier_initializer())
         biases = tf.get_variable('biases', shape=[fc_hidden_units1], initializer=tf.constant_initializer(0.05))
+        
+        variable_summaries(weights, scope.name+'/weights')
+        variable_summaries(biases, scope.name+'/biases')
+        
         h_pool2_flat = tf.reshape(h_pool2, [-1, 7*7*64])
         
         h_fc1 = tf.nn.relu(tf.matmul(h_pool2_flat, weights) + biases, name = 'h_fc1')
+        tf.histogram_summary(scope.name + '/activations', h_fc1)
+        
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
+        tf.histogram_summary(scope.name + '/dropout_activations', h_fc1_drop)
         
         
     with tf.variable_scope('h_fc2') as scope:
@@ -154,11 +203,16 @@ def inference(images, keep_prob, fc_hidden_units1=512):
                                   initializer=tf.contrib.layers.xavier_initializer())
         biases = tf.get_variable('biases', shape=[NUM_CLASSES])
         
+        variable_summaries(weights, scope.name+'/weights')
+        variable_summaries(biases, scope.name+'/biases')
+        
         logits = (tf.matmul(h_fc1_drop, weights) + biases)
+        tf.histogram_summary(scope.name + '/activations', logits)
+        
     return logits
 
 
-# In[7]:
+# In[8]:
 
 def calc_loss(logits, labels):
     """Calculates the loss from the logits and the labels.
@@ -170,11 +224,14 @@ def calc_loss(logits, labels):
     """
     labels = tf.to_float(labels)
     cross_entropy = tf.nn.softmax_cross_entropy_with_logits(logits, labels, name='xentropy')
+    
     loss = tf.reduce_mean(cross_entropy, name='xentropy_mean')
+    tf.scalar_summary('cross_entropy_loss', loss)
+    
     return loss
 
 
-# In[8]:
+# In[10]:
 
 def training(loss, learning_rate=5e-4):
     """Sets up the training Ops.
@@ -200,7 +257,7 @@ def training(loss, learning_rate=5e-4):
     return train_op
 
 
-# In[9]:
+# In[11]:
 
 def evaluation(logits, labels, topk=1):
     """Evaluate the quality of the logits at predicting the label.
@@ -220,10 +277,14 @@ def evaluation(logits, labels, topk=1):
     
     correct = tf.nn.in_top_k(logits, tf.reshape(tf.slice(labels, [0,1], [int(labels.get_shape()[0]), 1]),[-1]), topk)
     # Return the number of true entries.
-    return tf.reduce_sum(tf.cast(correct, tf.int32))
+    accurate =  tf.reduce_sum(tf.cast(correct, tf.int32))
+    accuracy =  tf.reduce_mean(tf.cast(correct, tf.float32))
+    tf.scalar_summary('accuracy', accuracy)
+    
+    return accurate
 
 
-# In[10]:
+# In[12]:
 
 def placeholder_inputs(batch_size):
     """Generate placeholder variables to represent the input tensors.
@@ -244,7 +305,7 @@ def placeholder_inputs(batch_size):
     return images_placeholder, labels_placeholder
 
 
-# In[11]:
+# In[13]:
 
 #UPDATE current_img_ind
 def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
@@ -275,9 +336,9 @@ def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
     return feed_dict, current_img_ind, data_set
 
 
-# In[12]:
+# In[25]:
 
-def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size):
+def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size, step, is_test=False):
     """Runs one evaluation against the full epoch of data.
     Args:
         sess: The session in which the model has been trained.
@@ -286,6 +347,7 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
         labels_placeholder: The labels placeholder.
         data_set: The set of images and labels to evaluate, from
                 input_data.read_data_sets().
+        step: The global step
     """
     # And run one epoch of eval.
     true_count = 0  # Counts the number of correct predictions.
@@ -297,11 +359,12 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
                                labels_placeholder, current_img_ind, batch_size)
         true_count += sess.run(eval_correct, feed_dict=feed_dict)
     precision = true_count / num_examples
+    
     print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
             (num_examples, true_count, precision))
 
 
-# In[13]:
+# In[31]:
 
 def run_training():
     """Train for a number of steps."""
@@ -328,7 +391,7 @@ def run_training():
         eval_correct = evaluation(logits, labels_placeholder)
 
         # Build the summary operation based on the TF collection of Summaries.
-        #summary_op = tf.merge_all_summaries()
+        summary_op = tf.merge_all_summaries()
 
         # Create a saver for writing training checkpoints.
         saver = tf.train.Saver()
@@ -336,12 +399,18 @@ def run_training():
         # Create a session for running Ops on the Graph.
         sess = tf.Session()
 
+        # Instantiate a SummaryWriter to output summaries and the Graph.
+        summary_path = os.path.abspath('logs')
+        if os.path.exists(summary_path):
+            shutil.rmtree(summary_path)
+        os.mkdir(summary_path)
+
+        summary_writer = tf.train.SummaryWriter(summary_path, sess.graph)
+        
         # Run the Op to initialize the variables.
         init = tf.initialize_all_variables()
         sess.run(init)
 
-        # Instantiate a SummaryWriter to output summaries and the Graph.
-        #summary_writer = tf.train.SummaryWriter('../Data/', sess.graph)
         current_img_ind = 0
         # And then after everything is built, start the training loop.
         for step in xrange(MAX_STEPS):
@@ -356,12 +425,12 @@ def run_training():
             
 
             # Run one step of the model.  The return values are the activations
-            # from the `train_op` (which is discarded) and the `loss` Op.  To
-            # inspect the values of your Ops or variables, you may include them
-            # in the list passed to sess.run() and the value tensors will be
-            # returned in the tuple from the call.
-            _, loss_value = sess.run([train_op, loss],
+            # from the `train_op` (which is discarded) and the `loss` Op.
+            _, summary_str, loss_value = sess.run([train_op, summary_op, loss],
                                feed_dict=feed_dict)
+            # Update the events file.
+            summary_writer.add_summary(summary_str, step)
+            summary_writer.flush()
 
             duration = time.time() - start_time
 
@@ -369,23 +438,22 @@ def run_training():
             if step % 5 == 0:
                 # Print status to stdout.
                 print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
-                # Update the events file.
-                #summary_str = sess.run(summary_op, feed_dict=feed_dict)
-                #summary_writer.add_summary(summary_str, step)
-                #summary_writer.flush()
-
+                
             # Save a checkpoint and evaluate the model periodically.
             if (step + 1) % (50) == 0 or (step + 1) == MAX_STEPS:
-                saver.save(sess, '../Data/model.ckpt')
+                model_save_path = os.path.abspath('../Data/models')
+                if not os.path.exists(model_save_path):
+                    os.mkdir(model_save_path)
+                saver.save(sess, model_save_path+'/model.ckpt', global_step=step)
                 # Evaluate against the training set.
                 print('Training Data Eval:')
-                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE)
+                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE, step)
                 # Evaluate against the validation set.
                 print('Validation Data Eval:')
-                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE)
+                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE, step, True)
 
 
-# In[14]:
+# In[32]:
 
 run_training()
 
