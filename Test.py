@@ -1,37 +1,33 @@
 
 # coding: utf-8
 
-# In[14]:
+# In[ ]:
 
 from __future__ import division
 import numpy as np
 import pandas as pd
 import os
 import glob
-import tensorflow as tf
-from skimage import io, color
+from skimage import io, color, measure
 from skimage.util import img_as_float, img_as_ubyte
-#import matplotlib.cm as cm
-#from matplotlib import pyplot as plt
-get_ipython().magic(u'matplotlib inline')
+import tensorflow as tf
 import time
 from six.moves import xrange 
 
 
-# In[15]:
+# In[ ]:
 
-data = pd.read_pickle('../Data/mean_normalised_df_no_class_bias.pkl') 
 mean_img = pd.read_pickle('../Data/mean_img_no_class_bias.pkl')
 
 
-# In[27]:
+# In[ ]:
 
 PATCH_DIM = 31
 BATCH_SIZE = 100 # Must be a perfect square
 NUM_CLASSES = 2
 
 
-# In[28]:
+# In[ ]:
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
@@ -49,10 +45,10 @@ def get_path(directory):
     return map(os.path.abspath, imgs), map(os.path.abspath, mask), map(os.path.abspath, gt)
 
 train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
-test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
+test, mask_test, gt_test = get_path('../Data/DRIVE/test')
 
 
-# In[29]:
+# In[ ]:
 
 def inference(images, keep_prob, fc_hidden_units1=512):
     """ Builds the model as far as is required for running the network
@@ -113,7 +109,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     return logits
 
 
-# In[30]:
+# In[ ]:
 
 def placeholder_inputs(batch_size):
     """Generate placeholder variables to represent the input tensors.
@@ -126,117 +122,56 @@ def placeholder_inputs(batch_size):
     return images_placeholder
 
 
-# In[31]:
+# In[ ]:
 
-def get_predictions(batch_x):
-    with tf.Graph().as_default():
-        # Generate placeholders for the images and labels.
-        images_placeholder = placeholder_inputs(BATCH_SIZE)
+def softmax(logits):
+    """ Performs softmax operation on logits
+    
+        Args:
+            logits: logits from inference module
+        Output:
+            Softmax of logits    
+    """
+    return tf.nn.softmax(logits)
 
-        # Build a Graph that computes predictions from the inference model.
-        logits = inference(images_placeholder, 1.0, 512)
-
-        # Create a saver for writing training checkpoints.
-        saver = tf.train.Saver()
-
-        # Create a session for running Ops on the Graph.
-        with tf.Session() as sess:
-            saver.restore(sess, '../Data/model.ckpt')
-
-            predictions = sess.run([logits],
-                                   feed_dict={images_placeholder: batch_x})
-            predictions = np.asarray(predictions).reshape(BATCH_SIZE, NUM_CLASSES)
-            
-            predicted_labels = np.argmax(predictions, axis=1)
-            return predicted_labels
-
-
-# In[32]:
-
-image = io.imread(train[0])
-mask = img_as_float(io.imread(mask_train[0]))
-gt = img_as_float(io.imread(gt_train[0]))
-mean_np_img = np.asarray(mean_img)
-
-
-# In[33]:
-
-"""
-segmented = np.zeros(image.shape[:2])
-
-rows = np.zeros(BATCH_SIZE, dtype='uint8')
-cols = np.zeros(BATCH_SIZE, dtype='uint8')
-feed = np.zeros((BATCH_SIZE, PATCH_DIM**2*3))
-predictions = np.zeros(BATCH_SIZE)
-
-count = 0
-pixel_count = 0
-h = int(PATCH_DIM/2)
-
-start_time = time.time()
-for i in range(h, image.shape[0] - h-1):
-    for j in range(h, image.shape[1] - h-1):
-        
-        if int(np.sum(mask[i-h:i+h+1,j-h:j+h+1])/PATCH_DIM**2) == 1:
-            pixel_count += 1
-            if count < BATCH_SIZE-1:
-                count += 1
-                feed[count] = image[i-h:i+h+1,j-h:j+h+1].reshape(-1)
-                rows[count] = i
-                cols[count] = j
-            else:
-                # Subtract training mean image
-                feed = feed - mean_np_img
-                
-                # Get predictions and draw accordingly on black image
-                
-                predictions = get_predictions(feed)
-                segmented[rows,cols] = predictions
-                
-                # Reset everything after passing feed to feedforward
-                rows = np.zeros(BATCH_SIZE, dtype='uint8')
-                cols = np.zeros(BATCH_SIZE, dtype='uint8')
-                feed = np.zeros((BATCH_SIZE, PATCH_DIM**2*3))
-                predictions = np.zeros(BATCH_SIZE)
-                count = 0
-                if pixel_count%3000 == 0:
-                    print "%d / %d"%(pixel_count, image.shape[0]*image.shape[1])
-                    current_time = time.time()
-                    print "Time taken - > %f" % (current_time - start_time)
-                    start_time = current_time
-
-segmented[0][0] = 0 # To nullify effects of final buffer
-                
-"""
-
-
-# In[34]:
+# In[ ]:
 
 def nbd(image, point):
+    """ Finds neighborhood around a point in an image
+        
+        Args: 
+            image: Input image
+            point: A point around which we would like to find the neighborhood
+        
+        Output:
+            1d vector of size [PATCH_DIM*PATCH_DIM*3] which is a neighborhood
+            aroud the point passed in the parameters list
+    """
     i = point[0]
     j = point[1]
     h = int(PATCH_DIM/2)
     return image[i-h:i+h+1,j-h:j+h+1].reshape(-1)
 
 
-# In[36]:
+# In[ ]:
 
-# We will start with a completely black image and update it chunk by chunk
-segmented = np.zeros(image.shape[:2])
+OUT_DIR = os.path.abspath("../Data/DRIVE/test_result")
 
-# We will use arrays to index the image and mask later
-rows, cols = np.meshgrid(np.arange(image.shape[0]), np.arange(image.shape[1]))
-row_col = np.stack([rows,cols], axis = 2)
-# The neighborhood windows to be fed into the graph
-feed = np.zeros((BATCH_SIZE, PATCH_DIM**2*3))
-# The predicted classes for all the windows that were fed to the graph
-predictions = np.zeros(BATCH_SIZE)
+# Make a directory to store the new images in
+if not os.path.exists(OUT_DIR):
+    os.mkdir(OUT_DIR)
+    
+mean_np_img = np.asarray(mean_img)
+
+
+# ### Decoding for all test images
+
+# In[ ]:
+
+h = int(PATCH_DIM/2)
 # We want to access the data chunk by chunk such that each chunk has
 # approximately BATCH_SIZE pixels
 stride = int(np.sqrt(BATCH_SIZE))
-
-pixel_count = 0
-h = int(PATCH_DIM/2)
 
 begin = time.time()
 start_time = time.time()
@@ -246,60 +181,96 @@ with tf.Graph().as_default():
 
     # Build a Graph that computes predictions from the inference model.
     logits = inference(images_placeholder, 1.0, 512)
+    sm = softmax(logits)
 
     # Create a saver for writing training checkpoints.
     saver = tf.train.Saver()
 
     # Create a session for running Ops on the Graph.
     with tf.Session() as sess:
-        saver.restore(sess, '../Data/model.ckpt')
+        model_save_path = os.path.abspath('../Data/models')
+        saver.restore(sess, model_save_path+'/model.ckpt-99')
         
-        i = h
-        while i < image.shape[0] - h-1:
-            j = h
-            while j < image.shape[1] - h-1:
-                # A small check is made to ensure that not all pixels are black
-                #print "i = %d, j = %d" % (i,j)
-                if int(np.max(mask[i:i+stride,j:j+stride])) == 1:
+        # Once the model has been restored, we iterate through all images in the test set
+        for im_no in xrange(len(test)):
+            
+            print "Working on image %d" % (im_no+1)
+            image = io.imread(test[im_no])
+            mask = img_as_float(io.imread(mask_test[im_no]))
+            gt = img_as_float(io.imread(gt_test[im_no]))
+            
+            # We will start with a completely black image and update it chunk by chunk
+            segmented = np.zeros(image.shape[:2])
 
-                    pixel_count += BATCH_SIZE # This will not be true for border cases though
-                                              # but we don't care about the progress at the end
+            # We will use arrays to index the image and mask later
+            cols, rows = np.meshgrid(np.arange(image.shape[1]), np.arange(image.shape[0]))
+            row_col = np.stack([rows,cols], axis = 2)
+            # The neighborhood windows to be fed into the graph
+            feed = np.zeros((BATCH_SIZE, PATCH_DIM**2*3))
+            # The predicted classes for all the windows that were fed to the graph
+            predictions = np.zeros(BATCH_SIZE)
+
+            pixel_count = 0
+        
+            
+            i = h+1
+            while i < image.shape[0] - h-2:
+                j = h+1
+                while j < image.shape[1] - h-1:
+                    # A small check is made to ensure that not all pixels are black
 
                     # Update i and j by adding stride but take care near the end
                     i_next = min(i+stride, image.shape[0]-h-1)
                     j_next = min(j+stride, image.shape[1]-h-1)
+                    
+                    if int(np.max(mask[i:i_next,j:j_next])) == 1:
 
-                    # Once we get a chunk, we flatten it and map a function that returns 
-                    # the neighborhood of each point
+                        pixel_count += BATCH_SIZE # This will not be true for border cases though
+                                                  # but we don't care about the progress at the end
 
-                    chunk = np.array(map(lambda p: nbd(image, p), row_col[i:i_next, j:j_next].reshape(-1,2)))
-                    if len(chunk) == BATCH_SIZE:
-                        feed = chunk
-                    else:
+                        
+
+
+                        # Once we get a chunk, we flatten it and map a function that returns 
+                        # the neighborhood of each point
+
+                        #feed = np.array(map(lambda p: nbd(image, p), row_col[i:i_next, j:j_next].reshape(-1,2)))
+                        #print " Feed shape = (%d, %d)" % feed.shape
+                        chunk = np.array(map(lambda p: nbd(image, p), row_col[i:i_next, j:j_next].reshape(-1,2)))
                         feed[:len(chunk)] = chunk
-                    #print " Feed shape = (%d, %d)" % feed.shape
-                    # Subtract training mean image
-                    feed = feed - mean_np_img
+                        
+                        # Subtract training mean image
+                        feed = feed - mean_np_img
 
-                    # Get predictions and draw accordingly on black image    
-                    predictions = sess.run([logits],
-                                   feed_dict={images_placeholder: feed})
-                    predictions = np.asarray(predictions).reshape(BATCH_SIZE, NUM_CLASSES)
-            
-                    predictions = np.argmax(predictions, axis=1)
-                    segmented[rows[i:i_next, j:j_next], cols[i:i_next, j:j_next]] = predictions.reshape(i_next-i, j_next-j)
+                        # Get predictions and draw accordingly on black image    
+                        predictions = sess.run([sm],
+                                       feed_dict={images_placeholder: feed})
+                        predictions = np.asarray(predictions).reshape(BATCH_SIZE, NUM_CLASSES)
 
-                    # Reset everything after passing feed to feedforward
-                    feed = np.zeros((BATCH_SIZE, PATCH_DIM**2*3))
-                    predictions = np.zeros(BATCH_SIZE)
+                        # Uncomment following line for non-probability plotting
+                        #predictions = np.argmax(predictions, axis=1)
+                        predictions = predictions[:,1]
 
-                    if pixel_count%3000 == 0:
-                        print "%d / %d"%(pixel_count, image.shape[0]*image.shape[1])
-                        current_time = time.time()
-                        print "Time taken - > %f" % (current_time - start_time)
-                        start_time = current_time
-                j += stride
-            i += stride
+                        if not len(chunk) == BATCH_SIZE:
+                            predictions = predictions[:len(chunk)]
+                        segmented[rows[i:i_next, j:j_next], cols[i:i_next, j:j_next]] = predictions.reshape(i_next-i, j_next-j)
+
+                        # Reset everything after passing feed to feedforward
+                        feed = np.zeros((BATCH_SIZE, PATCH_DIM**2*3))
+                        predictions = np.zeros(BATCH_SIZE)
+
+                        if np.mod(pixel_count, 5000) < BATCH_SIZE:
+                            print "%d / %d"%(pixel_count, image.shape[0]*image.shape[1])
+                            current_time = time.time()
+                            print "Time taken - > %f" % (current_time - start_time)
+                            start_time = current_time
+                    j += stride
+                i += stride
+            segmented = np.multiply(segmented,mask)
+            segmented = segmented * (1.0/segmented.max())
+                
+            name = test[im_no].split('/')[-1].split('.')[0]
+            io.imsave(os.path.join(OUT_DIR, name+'.jpg'), segmented)
 print "Total time = %f mins" % ((time.time()-begin)/60.0)
 
 
