@@ -1,16 +1,13 @@
 
-# coding: utf-8
-
-# In[1]:
-
 import numpy as np
 import pandas as pd
-from skimage import io, draw
+from skimage import io
 from skimage.util import img_as_float, img_as_ubyte
-#%matplotlib inline
 import os
 import glob
 import time
+import sys
+import argparse
 
 
 # In[2]:
@@ -39,23 +36,21 @@ def get_path(directory):
     
     return map(os.path.abspath, imgs), map(os.path.abspath, mask), map(os.path.abspath, gt)
 
-train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
-test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
-
 
 # In[3]:
 
 # Hyper Params
-total_patches = 600
-num_training_images = len(train)
-patches_per_image = total_patches/num_training_images
+total_patches = 4800
+num_training_images = None
+patches_per_image = None
 patch_dim = 31                          # Dimension of window used for training
-num_patches = 0                         # Patches used for training from the current image
 current_img_index = -1                   # Index of the current image in 'train'
-current_img = io.imread(train[0])    
-current_mask = img_as_float(io.imread(mask_train[0]))
-current_gt = img_as_float(io.imread(gt_train[0]))
+current_img = None    
+current_mask = None
+current_gt = None
 positive_proprtion = 0.5
+
+df = None
 
 
 # In[4]:
@@ -69,8 +64,8 @@ def load_next_img(data,mask_data,gt_data):
            gt_data: List of paths to the corresponding ground truth images
        
     """
-    global num_patches, current_img_index, current_img, current_mask, current_gt
-    num_patches = 0
+    global current_img_index, current_img, current_mask, current_gt
+    
     if current_img_index < len(data)-1:
         current_img_index +=1
         print "Working on image %d"%(current_img_index + 1)
@@ -83,15 +78,7 @@ def load_next_img(data,mask_data,gt_data):
         return False
 
 
-# In[7]:
-
-begin = time.time()
-print "Creating DataFrame"
-df = pd.DataFrame(index=np.arange(total_patches), columns = np.arange(patch_dim**2*3+1))
-print "Dataframe ready"
-
-
-# In[8]:
+# In[5]:
 
 def save_img_data(data, mask_data, gt_data):
     """Extracts PATCHES_PER_IMAGE number of patches from each image
@@ -127,39 +114,81 @@ def save_img_data(data, mask_data, gt_data):
                 neg_count += 1
 
 
-# In[9]:
+# In[6]:
 
-while load_next_img(train, mask_train, gt_train):
-    start = time.time()
-    save_img_data(train,mask_train, gt_train)
-    print "Time taken for this image = %f secs" %( (time.time()-start))
-
-
-# In[10]:
-
-print "Mean Normalising"
-last = len(df.columns) -1
-mean_img = np.mean(df)[:-1]
-labels = df[last]
-mean_normalised_df = df - np.mean(df)
-mean_normalised_df[last] = labels
-
-
-# In[11]:
-
-print "Randomly shuffling the datasets"
-mean_normalised_df = mean_normalised_df.iloc[np.random.permutation(len(df))]
-mean_normalised_df = mean_normalised_df.reset_index(drop=True)
-
-
-# In[12]:
-
-print "Writing to pickle"
-mean_normalised_df.to_pickle('../Data/mean_normalised_df_no_class_bias.pkl')
-mean_img.to_pickle('../Data/mean_img_no_class_bias.pkl')
+def finish_parsing():
+    parser = argparse.ArgumentParser(description=
+                                     'Python script to save window patches for training')
+    parser.add_argument("--total_patches", type=int,
+                        help="Total number of training images/patches to be used [Default - 4800]")
+    parser.add_argument("--patch_dim", type=int,
+                        help="Dimension of window to be used as a training patch [Default - 31]")
+    parser.add_argument("--positive", type=float,
+                        help="Proportion of positive classes to be kept in training data [Default - 0.5]")
+      
+    args = parser.parse_args()
+    
+    global total_patches, patch_dim, positive_proprtion
+    if args.total_patches is not None:
+        total_patches = args.total_patches
+        print "New total patches = %d" % total_patches
+    if args.patch_dim is not None:
+        patch_dim = args.patch_dim
+        print "New patch_dim = %d" % patch_dim
+    if args.positive is not None:
+        positive_proprtion = args.positive
+        print "New positive_proprtion = %.2f" % positive_proprtion
+    
 
 
-# In[13]:
+# In[7]:
 
-print "Total time taken = %f mins" %( (time.time()-begin)/60.0)
+def main():
+
+    finish_parsing()
+    
+    train, mask_train, gt_train =  get_path('../../Data/DRIVE/training')
+    test, mask_test, mask_gt = get_path('../../Data/DRIVE/test')
+    
+    # Redefining some hyperparams and global variables
+    global num_training_images, patches_per_image, current_img, current_mask, current_gt
+    num_training_images = len(train)
+    patches_per_image = total_patches/num_training_images
+    current_img = io.imread(train[0])    
+    current_mask = img_as_float(io.imread(mask_train[0]))
+    current_gt = img_as_float(io.imread(gt_train[0]))
+
+    begin = time.time()
+    print "Creating DataFrame"
+    global df
+    df = pd.DataFrame(index=np.arange(total_patches), columns = np.arange(patch_dim**2*3+1))
+    print "Dataframe ready"
+
+    while load_next_img(train, mask_train, gt_train):
+        start = time.time()
+        save_img_data(train,mask_train, gt_train)
+        print "Time taken for this image = %f secs" %( (time.time()-start))
+
+    print "\nMean Normalising\n"
+    last = len(df.columns) -1
+    mean_img = np.mean(df)[:-1]
+    labels = df[last]
+    mean_normalised_df = df - np.mean(df)
+    mean_normalised_df[last] = labels
+
+    print "Randomly shuffling the datasets\n"
+    mean_normalised_df = mean_normalised_df.iloc[np.random.permutation(len(df))]
+    mean_normalised_df = mean_normalised_df.reset_index(drop=True)
+
+    print "Writing to pickle\n"
+    mean_normalised_df.to_pickle('../../Data/mean_normalised_df_no_class_bias.pkl')
+    mean_img.to_pickle('../../Data/mean_img_no_class_bias.pkl')
+
+    print "Total time taken = %f mins\n" %( (time.time()-begin)/60.0)
+
+
+# In[8]:
+
+if __name__ == "__main__":
+    main()
 
