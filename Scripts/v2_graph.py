@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[17]:
+# In[2]:
 
 from __future__ import division
 import numpy as np
@@ -9,17 +9,14 @@ import pandas as pd
 import os
 import glob
 import tensorflow as tf
-#from skimage import io
-#from skimage.util import img_as_float, img_as_ubyte
-#import matplotlib.cm as cm
-#from matplotlib import pyplot as plt
-#%matplotlib inline
 import time
 from six.moves import xrange 
 import shutil
+import sys
+import argparse
 
 
-# In[2]:
+# In[3]:
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
@@ -36,34 +33,30 @@ def get_path(directory):
     
     return map(os.path.abspath, imgs), map(os.path.abspath, mask), map(os.path.abspath, gt)
 
-train, mask_train, gt_train =  get_path('../Data/DRIVE/training')
-test, mask_test, mask_gt = get_path('../Data/DRIVE/test')
 
+# In[4]:
 
-# In[3]:
-
-data = pd.read_pickle('../Data/mean_normalised_df_no_class_bias.pkl') 
-mean_img = pd.read_pickle('../Data/mean_img_no_class_bias.pkl')
-
-
-# In[28]:
-
-# Hyper Params
-TOTAL_PATCHES = len(data)
-NUM_IMAGES = len(train)
-PATCHES_PER_IMAGE = TOTAL_PATCHES/NUM_IMAGES
-PATCH_DIM = 31
-BATCH_SIZE = 60
-LEARNING_RATE = 5e-4
-TRAINING_PROP = 0.8
-MAX_STEPS = 100
-print PATCHES_PER_IMAGE
-print MAX_STEPS
-
-NUM_CLASSES = 2
+data = None
+mean_img = None
 
 
 # In[5]:
+
+# Hyper Params
+TOTAL_PATCHES = None
+NUM_IMAGES = None
+PATCHES_PER_IMAGE = None
+PATCH_DIM = None
+BATCH_SIZE = 64
+LEARNING_RATE = 5e-4
+TRAINING_PROP = 0.8
+MAX_STEPS = 125
+CKPT_STEP = 40
+LOSS_STEP = 2
+NUM_CLASSES = 2
+
+
+# In[6]:
 
 def next_batch(size, df, current_batch_ind):
     """Returns the next mini batch of data from the dataset passed
@@ -98,7 +91,7 @@ def next_batch(size, df, current_batch_ind):
     return (batch_x, batch_y), current_batch_ind, df
 
 
-# In[6]:
+# In[7]:
 
 def variable_summaries(var, name):
     """Attach a lot of summaries to a Tensor."""
@@ -113,7 +106,7 @@ def variable_summaries(var, name):
         tf.histogram_summary(name, var)
 
 
-# In[22]:
+# In[8]:
 
 def inference(images, keep_prob, fc_hidden_units1=512):
     """ Builds the model as far as is required for running the network
@@ -212,7 +205,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     return logits
 
 
-# In[8]:
+# In[9]:
 
 def calc_loss(logits, labels):
     """Calculates the loss from the logits and the labels.
@@ -336,9 +329,9 @@ def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
     return feed_dict, current_img_ind, data_set
 
 
-# In[25]:
+# In[14]:
 
-def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size, step, is_test=False):
+def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size):
     """Runs one evaluation against the full epoch of data.
     Args:
         sess: The session in which the model has been trained.
@@ -348,6 +341,9 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
         data_set: The set of images and labels to evaluate, from
                 input_data.read_data_sets().
         step: The global step
+    Output:
+        precision: Accuracy of one evaluation of epoch data
+
     """
     # And run one epoch of eval.
     true_count = 0  # Counts the number of correct predictions.
@@ -362,9 +358,52 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
     
     print('  Num examples: %d  Num correct: %d  Precision @ 1: %0.04f' %
             (num_examples, true_count, precision))
+    return precision
 
 
-# In[31]:
+# In[15]:
+
+def finish_parsing():
+    global BATCH_SIZE, LEARNING_RATE, TRAINING_PROP, MAX_STEPS, CKPT_STEP, LOSS_STEP
+    
+    parser = argparse.ArgumentParser(description=
+                                     'Training script')
+    parser.add_argument("--batch", type=int,
+                        help="Batch Size [Default - 64]")
+    parser.add_argument("--learning_rate", type=float,
+                        help="Learning rate for optimiser [Default - 5e-4]")
+    parser.add_argument("--training_prop", type=float,
+                        help="Proportion of data to be used for training data [Default - 0.8]")
+    parser.add_argument("--max_steps", type=int,
+                        help="Maximum number of iteration till which the program must run [Default - 100]")  
+    parser.add_argument("--checkpoint_step", type=int,
+                        help="Step after which an evaluation is carried out on validation set and model is saved [Default - 50]")
+    parser.add_argument("--loss_step", type=int,
+                        help="Step after which loss is printed [Default - 5]")
+    args = parser.parse_args()
+    
+    global total_patches, patch_dim, positive_proprtion
+    if args.batch is not None:
+        BATCH_SIZE = args.batch
+        print "New BATCH_SIZE = %d" % BATCH_SIZE
+    if args.learning_rate is not None:
+        LEARNING_RATE = args.learning_rate
+        print "New LEARNING_RATE = %.5f" % LEARNING_RATE
+    if args.training_prop is not None:
+        TRAINING_PROP = args.training_prop
+        print "New TRAINING_PROP = %.2f" % TRAINING_PROP
+    if args.max_steps is not None:
+        MAX_STEPS = args.max_steps
+        print "New MAX_STEPS = %d" % MAX_STEPS
+    if args.checkpoint_step is not None:
+        CKPT_STEP = args.checkpoint_step
+        print "New CKPT_STEP = %d" % CKPT_STEP
+    if args.loss_step is not None:
+        LOSS_STEP = args.loss_step
+        print "New LOSS_STEP = %d" % LOSS_STEP
+
+
+# In[23]:
 
 def run_training():
     """Train for a number of steps."""
@@ -373,6 +412,8 @@ def run_training():
     test_data = data[int(TRAINING_PROP*len(data)):]
     train_data = train_data.reset_index(drop = True)
     test_data = test_data.reset_index(drop = True)
+    
+    validation_accuracy = np.zeros((1,3))
     
     with tf.Graph().as_default():
         # Generate placeholders for the images and labels.
@@ -400,7 +441,7 @@ def run_training():
         sess = tf.Session()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        summary_path = os.path.abspath('logs')
+        summary_path = os.path.abspath('../logs/')
         if os.path.exists(summary_path):
             shutil.rmtree(summary_path)
         os.mkdir(summary_path)
@@ -435,27 +476,62 @@ def run_training():
             duration = time.time() - start_time
 
             # Write the summaries and print an overview fairly often.
-            if step % 5 == 0:
+            if step % LOSS_STEP == 0:
                 # Print status to stdout.
                 print('Step %d: loss = %.2f (%.3f sec)' % (step, loss_value, duration))
                 
             # Save a checkpoint and evaluate the model periodically.
-            if (step + 1) % (50) == 0 or (step + 1) == MAX_STEPS:
-                model_save_path = os.path.abspath('../Data/models')
+            if (step + 1) % (CKPT_STEP) == 0 or (step + 1) == MAX_STEPS:
+                model_save_path = os.path.abspath('../../Data/models')
                 if not os.path.exists(model_save_path):
                     os.mkdir(model_save_path)
                 saver.save(sess, model_save_path+'/model.ckpt', global_step=step)
                 # Evaluate against the training set.
                 print('Training Data Eval:')
-                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE, step)
+                train_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE)
                 # Evaluate against the validation set.
                 print('Validation Data Eval:')
-                do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE, step, True)
+                valid_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE)
+                
+                validation_accuracy = np.append(validation_accuracy, np.array([[step, train_acc, valid_acc]]), axis=0)
+    np.save(os.path.abspath('../../Data/')+ '/validation_accuracy', validation_accuracy)
+
+    
+# In[24]:
+
+def main():
+    finish_parsing()
+    
+    global data, mean_img, TOTAL_PATCHES, NUM_IMAGES, PATCHES_PER_IMAGE, PATCH_DIM
+    print 'Loading data'
+    data = pd.read_pickle('../../Data/mean_normalised_df_no_class_bias.pkl') 
+    mean_img = pd.read_pickle('../../Data/mean_img_no_class_bias.pkl')
+    print 'Loading complete'
+    
+    
+    train, mask_train, gt_train =  get_path('../../Data/DRIVE/training')
+    test, mask_test, mask_gt = get_path('../../Data/DRIVE/test')
+
+    
+    # Changing some Hyper Params
+    TOTAL_PATCHES = len(data)
+    NUM_IMAGES = len(train)
+    PATCHES_PER_IMAGE = TOTAL_PATCHES/NUM_IMAGES                                                                                                                                                                                                            
+    PATCH_DIM = int(np.sqrt((len(data.columns)-1)/3))
+    
+    
+    run_training()
 
 
-# In[32]:
+# In[25]:
 
-run_training()
+if __name__ == "__main__":
+    '''
+    sys.argv = ['v2_graph.py', '--batch', '64', '--learning_rate', '5e-4',
+               '--training_prop', '0.9', '--max_steps', '25', 
+                '--checkpoint_step', '25', '--loss_step', '2']
+    '''                                                                                                                                                                                                                                                                                                                                                                                                                                         
+    main()
 
 
 # In[ ]:
