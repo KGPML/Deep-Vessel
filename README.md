@@ -17,9 +17,9 @@ database, we achieve the objective of vessel detection with
 maximum average accuracy of 91.8%.
 <hr>
 
-<img src="./images/01_test_src.png?raw=True" width="250">
-<img src="./images/01_manual1.png?raw=True" width="250">
-<img src="./images/01_test.png?raw=True" width="250">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test_src.png?raw=True" width="250">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_manual1.png?raw=True" width="250">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test.png?raw=True" width="250">
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Fundus image &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 Manual segmentation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
@@ -27,17 +27,17 @@ Predicted Segmentation
 <hr>
 ## Proposed Method
 
-<img src="./images/Proposed-Method.png?raw=True" width="800">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Proposed-Method.png?raw=True" width="800">
 
 <hr>
 ## Architecture
 
-<img src="./images/Architecture.png?raw=True" width="800">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.png?raw=True" width="800">
 
 <hr>
 ## Some Results
 
-<img src="./images/Magnified1.png?raw=True" width="800">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1.png?raw=True" width="800">
 
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Fundus image &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
