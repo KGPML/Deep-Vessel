@@ -1,8 +1,3 @@
-
-# coding: utf-8
-
-# In[2]:
-
 from __future__ import division
 import numpy as np
 import pandas as pd
@@ -16,7 +11,7 @@ import sys
 import argparse
 
 
-# In[3]:
+# In[ ]:
 
 def get_path(directory):
     imgs = glob.glob(directory + '/images/*.tif')
@@ -34,13 +29,13 @@ def get_path(directory):
     return map(os.path.abspath, imgs), map(os.path.abspath, mask), map(os.path.abspath, gt)
 
 
-# In[4]:
+# In[ ]:
 
 data = None
 mean_img = None
 
 
-# In[5]:
+# In[ ]:
 
 # Hyper Params
 TOTAL_PATCHES = None
@@ -53,10 +48,11 @@ TRAINING_PROP = 0.8
 MAX_STEPS = 125
 CKPT_STEP = 40
 LOSS_STEP = 2
+KEEP_PROB = 0.5
 NUM_CLASSES = 2
 
 
-# In[6]:
+# In[ ]:
 
 def next_batch(size, df, current_batch_ind):
     """Returns the next mini batch of data from the dataset passed
@@ -91,7 +87,7 @@ def next_batch(size, df, current_batch_ind):
     return (batch_x, batch_y), current_batch_ind, df
 
 
-# In[7]:
+# In[ ]:
 
 def variable_summaries(var, name):
     """Attach a lot of summaries to a Tensor."""
@@ -106,7 +102,7 @@ def variable_summaries(var, name):
         tf.histogram_summary(name, var)
 
 
-# In[8]:
+# In[ ]:
 
 def inference(images, keep_prob, fc_hidden_units1=512):
     """ Builds the model as far as is required for running the network
@@ -114,7 +110,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
 
     Args:
         images: Images placeholder, from inputs().
-        keep_prob: Probability used for Droupout in the final Affine Layer
+        keep_prob: Probability used for Dropout in the final Affine Layer
         fc_hidden_units1: Number of hidden neurons in final Affine layer
     Returns:
         softmax_linear: Output tensor with the computed logits.
@@ -205,7 +201,7 @@ def inference(images, keep_prob, fc_hidden_units1=512):
     return logits
 
 
-# In[9]:
+# In[ ]:
 
 def calc_loss(logits, labels):
     """Calculates the loss from the logits and the labels.
@@ -224,7 +220,7 @@ def calc_loss(logits, labels):
     return loss
 
 
-# In[10]:
+# In[ ]:
 
 def training(loss, learning_rate=5e-4):
     """Sets up the training Ops.
@@ -250,7 +246,7 @@ def training(loss, learning_rate=5e-4):
     return train_op
 
 
-# In[11]:
+# In[ ]:
 
 def evaluation(logits, labels, topk=1):
     """Evaluate the quality of the logits at predicting the label.
@@ -277,7 +273,7 @@ def evaluation(logits, labels, topk=1):
     return accurate
 
 
-# In[12]:
+# In[ ]:
 
 def placeholder_inputs(batch_size):
     """Generate placeholder variables to represent the input tensors.
@@ -298,10 +294,10 @@ def placeholder_inputs(batch_size):
     return images_placeholder, labels_placeholder
 
 
-# In[13]:
+# In[ ]:
 
 #UPDATE current_img_ind
-def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
+def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size, keep_prob):
     """Fills the feed_dict for training the given step.
     A feed_dict takes the form of:
     feed_dict = {
@@ -313,6 +309,7 @@ def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
         images_pl: The images placeholder, from placeholder_inputs().
         labels_pl: The labels placeholder, from placeholder_inputs().
         current_img_ind: The current position of the index in the dataset
+        keep_prob: Placeholder for dropout's keep_probability
     Returns:
         feed_dict: The feed dictionary mapping from placeholders to values.
         current_img_ind: The updated position of the index in the dataset
@@ -325,13 +322,14 @@ def fill_feed_dict(data_set, images_pl, labels_pl, current_img_ind, batch_size):
     feed_dict = {
       images_pl: batch[0],
       labels_pl: batch[1],
+      keep_prob: KEEP_PROB
     }
     return feed_dict, current_img_ind, data_set
 
 
-# In[14]:
+# In[ ]:
 
-def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size):
+def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set, batch_size, keep_prob):
     """Runs one evaluation against the full epoch of data.
     Args:
         sess: The session in which the model has been trained.
@@ -340,7 +338,7 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
         labels_placeholder: The labels placeholder.
         data_set: The set of images and labels to evaluate, from
                 input_data.read_data_sets().
-        step: The global step
+        keep_prob: Placeholder for dropout's keep_probability
     Output:
         precision: Accuracy of one evaluation of epoch data
 
@@ -352,7 +350,8 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
     current_img_ind = 0
     for step in xrange(steps_per_epoch):
         feed_dict, current_img_ind, data_set = fill_feed_dict(data_set, images_placeholder,
-                               labels_placeholder, current_img_ind, batch_size)
+                               labels_placeholder, current_img_ind, batch_size, keep_prob)
+        feed_dict[keep_prob] = 1.0
         true_count += sess.run(eval_correct, feed_dict=feed_dict)
     precision = true_count / num_examples
     
@@ -361,7 +360,7 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
     return precision
 
 
-# In[15]:
+# In[ ]:
 
 def finish_parsing():
     global BATCH_SIZE, LEARNING_RATE, TRAINING_PROP, MAX_STEPS, CKPT_STEP, LOSS_STEP
@@ -380,6 +379,8 @@ def finish_parsing():
                         help="Step after which an evaluation is carried out on validation set and model is saved [Default - 50]")
     parser.add_argument("--loss_step", type=int,
                         help="Step after which loss is printed [Default - 5]")
+    parser.add_argument("--keep_prob", type=float,
+                        help="Keep Probability for dropout layer [Default - 0.5]")
     args = parser.parse_args()
     
     global total_patches, patch_dim, positive_proprtion
@@ -401,9 +402,12 @@ def finish_parsing():
     if args.loss_step is not None:
         LOSS_STEP = args.loss_step
         print "New LOSS_STEP = %d" % LOSS_STEP
+    if args.keep_prob is not None:
+        KEEP_PROB = args.keep_prob
+        print "New KEEP_PROB = %.2f" % KEEP_PROB
 
 
-# In[23]:
+# In[ ]:
 
 def run_training():
     """Train for a number of steps."""
@@ -418,9 +422,10 @@ def run_training():
     with tf.Graph().as_default():
         # Generate placeholders for the images and labels.
         images_placeholder, labels_placeholder = placeholder_inputs(BATCH_SIZE)
-
+        
+        keep_prob = tf.placeholder(tf.float32)
         # Build a Graph that computes predictions from the inference model.
-        logits = inference(images_placeholder, 0.5, 512)
+        logits = inference(images_placeholder, keep_prob, 512)
 
         # Add to the Graph the Ops for loss calculation.
         loss = calc_loss(logits, labels_placeholder)
@@ -462,7 +467,7 @@ def run_training():
             feed_dict, current_img_ind, train_data = fill_feed_dict(train_data,
                                  images_placeholder,
                                  labels_placeholder, current_img_ind=current_img_ind, 
-                                                        batch_size=BATCH_SIZE)
+                                                        batch_size=BATCH_SIZE, keep_prob=keep_prob)
             
 
             # Run one step of the model.  The return values are the activations
@@ -488,16 +493,16 @@ def run_training():
                 saver.save(sess, model_save_path+'/model.ckpt', global_step=step)
                 # Evaluate against the training set.
                 print('Training Data Eval:')
-                train_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE)
+                train_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE, keep_prob)
                 # Evaluate against the validation set.
                 print('Validation Data Eval:')
-                valid_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE)
+                valid_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE, keep_prob)
                 
                 validation_accuracy = np.append(validation_accuracy, np.array([[step, train_acc, valid_acc]]), axis=0)
     np.save(os.path.abspath('../../Data/')+ '/validation_accuracy', validation_accuracy)
 
-    
-# In[24]:
+
+# In[ ]:
 
 def main():
     finish_parsing()
@@ -516,21 +521,21 @@ def main():
     # Changing some Hyper Params
     TOTAL_PATCHES = len(data)
     NUM_IMAGES = len(train)
-    PATCHES_PER_IMAGE = TOTAL_PATCHES/NUM_IMAGES                                                                                                                                                                                                            
+    PATCHES_PER_IMAGE = TOTAL_PATCHES/NUM_IMAGES
     PATCH_DIM = int(np.sqrt((len(data.columns)-1)/3))
     
     
     run_training()
 
 
-# In[25]:
+# In[ ]:
 
 if __name__ == "__main__":
     '''
     sys.argv = ['v2_graph.py', '--batch', '64', '--learning_rate', '5e-4',
-               '--training_prop', '0.9', '--max_steps', '25', 
-                '--checkpoint_step', '25', '--loss_step', '2']
-    '''                                                                                                                                                                                                                                                                                                                                                                                                                                         
+               '--training_prop', '0.9', '--max_steps', '20', 
+                '--checkpoint_step', '10', '--loss_step', '2', '--keep_prob', '0.4']
+    '''
     main()
 
 
