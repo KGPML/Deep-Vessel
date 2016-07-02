@@ -1,3 +1,8 @@
+
+# coding: utf-8
+
+# In[ ]:
+
 from __future__ import division
 import numpy as np
 import pandas as pd
@@ -50,6 +55,7 @@ CKPT_STEP = 40
 LOSS_STEP = 2
 KEEP_PROB = 0.5
 NUM_CLASSES = 2
+FCHU1 = 512                # Fully connected layer 1 hidden units
 
 
 # In[ ]:
@@ -104,7 +110,7 @@ def variable_summaries(var, name):
 
 # In[ ]:
 
-def inference(images, keep_prob, fc_hidden_units1=512):
+def inference(images, keep_prob, fc_hidden_units1):
     """ Builds the model as far as is required for running the network
     forward to make predictions.
 
@@ -369,6 +375,8 @@ def finish_parsing():
                                      'Training script')
     parser.add_argument("--batch", type=int,
                         help="Batch Size [Default - 64]")
+    parser.add_argument("--fchu1", type=int,
+                        help="Number of hidden units in FC1 layer [Default - 512]")
     parser.add_argument("--learning_rate", type=float,
                         help="Learning rate for optimiser [Default - 5e-4]")
     parser.add_argument("--training_prop", type=float,
@@ -387,6 +395,9 @@ def finish_parsing():
     if args.batch is not None:
         BATCH_SIZE = args.batch
         print "New BATCH_SIZE = %d" % BATCH_SIZE
+    if args.fchu1 is not None:
+        FCHU1 = args.fchu1
+        print "New FCHU1 = %d" % FCHU1
     if args.learning_rate is not None:
         LEARNING_RATE = args.learning_rate
         print "New LEARNING_RATE = %.5f" % LEARNING_RATE
@@ -425,7 +436,7 @@ def run_training():
         
         keep_prob = tf.placeholder(tf.float32)
         # Build a Graph that computes predictions from the inference model.
-        logits = inference(images_placeholder, keep_prob, 512)
+        logits = inference(images_placeholder, keep_prob, FCHU1)
 
         # Add to the Graph the Ops for loss calculation.
         loss = calc_loss(logits, labels_placeholder)
@@ -531,11 +542,9 @@ def main():
 # In[ ]:
 
 if __name__ == "__main__":
-    '''
-    sys.argv = ['v2_graph.py', '--batch', '64', '--learning_rate', '5e-4',
+    sys.argv = ['v2_graph.py', '--batch', '64', '--fchu1', '128', '--learning_rate', '5e-4',
                '--training_prop', '0.9', '--max_steps', '20', 
                 '--checkpoint_step', '10', '--loss_step', '2', '--keep_prob', '0.4']
-    '''
     main()
 
 
