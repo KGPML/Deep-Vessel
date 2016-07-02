@@ -14,16 +14,15 @@ fundus image. During inference, the responses of the individual
 ConvNets of the ensemble are averaged to form the final
 segmentation. In experimental evaluation with the DRIVE
 database, we achieve the objective of vessel detection with
-maximum average accuracy of 91.8%.
+maximum average accuracy of 91.8% (This accuracy is different 
+from the accuracy reported in the paper because of different  
+libraries used)
 <hr>
 
-<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test_src.png?raw=True" width="250">
-<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_manual1.png?raw=True" width="250">
-<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test.png?raw=True" width="250">
+FUNDUS Image             |  Manual Segmentation           | Predicted Segmentation
+:-------------------------:|:-------------------------:|:-------------------------:
+ <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test_src.png?raw=True" width="200"> |  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_manual1.png?raw=True" width="200"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test.png?raw=True" width="200">
 
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Fundus image &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Manual segmentation&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-Predicted Segmentation
 <hr>
 ## Proposed Method
 
