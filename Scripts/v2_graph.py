@@ -56,6 +56,7 @@ LOSS_STEP = 2
 KEEP_PROB = 0.5
 NUM_CLASSES = 2
 FCHU1 = 512                # Fully connected layer 1 hidden units
+MODEL_NAME = '1'
 
 
 # In[ ]:
@@ -369,7 +370,7 @@ def do_eval(sess, eval_correct, images_placeholder, labels_placeholder, data_set
 # In[ ]:
 
 def finish_parsing():
-    global BATCH_SIZE, LEARNING_RATE, TRAINING_PROP, MAX_STEPS, CKPT_STEP, LOSS_STEP
+    global BATCH_SIZE, LEARNING_RATE, TRAINING_PROP, MAX_STEPS, CKPT_STEP, LOSS_STEP, FCHU1, KEEP_PROB, MODEL_NAME
     
     parser = argparse.ArgumentParser(description=
                                      'Training script')
@@ -389,12 +390,17 @@ def finish_parsing():
                         help="Step after which loss is printed [Default - 5]")
     parser.add_argument("--keep_prob", type=float,
                         help="Keep Probability for dropout layer [Default - 0.5]")
+    parser.add_argument("--model_name",
+                        help="Index of the model [Default - '1']")
     args = parser.parse_args()
     
     global total_patches, patch_dim, positive_proprtion
     if args.batch is not None:
         BATCH_SIZE = args.batch
         print "New BATCH_SIZE = %d" % BATCH_SIZE
+    if args.model_name is not None:
+        MODEL_NAME = args.model_name
+        print "New MODEL_NAME = %s" % MODEL_NAME
     if args.fchu1 is not None:
         FCHU1 = args.fchu1
         print "New FCHU1 = %d" % FCHU1
@@ -457,7 +463,10 @@ def run_training():
         sess = tf.Session()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        summary_path = os.path.abspath('../logs/')
+        logs_path = os.path.abspath('../logs/')
+        if not os.path.exists(logs_path):
+            os.mkdir(logs_path)
+        summary_path = os.path.abspath(logs_path+'/model'+MODEL_NAME+'/')
         if os.path.exists(summary_path):
             shutil.rmtree(summary_path)
         os.mkdir(summary_path)
@@ -498,7 +507,10 @@ def run_training():
                 
             # Save a checkpoint and evaluate the model periodically.
             if (step + 1) % (CKPT_STEP) == 0 or (step + 1) == MAX_STEPS:
-                model_save_path = os.path.abspath('../../Data/models')
+                model_path = os.path.abspath('../../Data/models/')
+                if not os.path.exists(model_path):
+                    os.mkdir(model_path)
+                model_save_path = os.path.abspath(model_path+'/model'+MODEL_NAME+'/')
                 if not os.path.exists(model_save_path):
                     os.mkdir(model_save_path)
                 saver.save(sess, model_save_path+'/model.ckpt', global_step=step)
@@ -510,7 +522,7 @@ def run_training():
                 valid_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, test_data, BATCH_SIZE, keep_prob)
                 
                 validation_accuracy = np.append(validation_accuracy, np.array([[step, train_acc, valid_acc]]), axis=0)
-    np.save(os.path.abspath('../../Data/')+ '/validation_accuracy', validation_accuracy)
+    np.save(os.path.abspath('../../Data/models/model'+MODEL_NAME+'/')+ '/validation_accuracy', validation_accuracy)
 
 
 # In[ ]:
@@ -542,13 +554,11 @@ def main():
 # In[ ]:
 
 if __name__ == "__main__":
+    '''
     sys.argv = ['v2_graph.py', '--batch', '64', '--fchu1', '128', '--learning_rate', '5e-4',
                '--training_prop', '0.9', '--max_steps', '20', 
-                '--checkpoint_step', '10', '--loss_step', '2', '--keep_prob', '0.4']
+                '--checkpoint_step', '10', '--loss_step', '2', '--keep_prob', '0.6',
+                '--model_name', '3']
+    '''
     main()
-
-
-# In[ ]:
-
-
 
