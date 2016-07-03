@@ -463,7 +463,7 @@ def run_training():
         sess = tf.Session()
 
         # Instantiate a SummaryWriter to output summaries and the Graph.
-        logs_path = os.path.abspath('../logs/')
+        logs_path = os.path.abspath('../../Data/logs/')
         if not os.path.exists(logs_path):
             os.mkdir(logs_path)
         summary_path = os.path.abspath(logs_path+'/model'+MODEL_NAME+'/')
