@@ -80,6 +80,6 @@ def main():
 # In[7]:
 
 if __name__ == "__main__":
-    sys.argv = ['train_ensemble.py', '--a', '../arglists/cl_args.json']
+    '''sys.argv = ['train_ensemble.py', '--a', '../arglists/cl_args.json']'''
     main()
 
