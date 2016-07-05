@@ -61,6 +61,6 @@ target/
 #Ipython Notebook
 .ipynb_checkpoints
 *~
-*.jpg
 *.csv
 Notebooks/Untitled.ipynb
+images_high_res/
