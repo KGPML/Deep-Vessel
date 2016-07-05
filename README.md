@@ -5,7 +5,7 @@ Vision impairment due to pathological damage of the retina can largely be preven
 
 FUNDUS Image             |  Manual Segmentation           | Predicted Segmentation
 :-------------------------:|:-------------------------:|:-------------------------:
- <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/01_test_src.jpg" width="220"> |  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_manual1.jpg" width="220"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/01_test.jpg" width="220">
+ <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test_src.jpg?raw=True" width="220"> |  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_manual1.jpg?raw=True" width="220"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test.jpg?raw=True" width="220">
 
 <hr>
 ## Proposed Method
@@ -23,7 +23,7 @@ testing over the DRIVE test set (image id. 1-20).
 Learning rate was kept constant across models at 5e − 4. Dropout probability and number of hidden units in
 the penultimate affine layer of the different models were sampled respectively from U ([0:5; 0:9]) and U ({128; 256; 512}) where U(:) denotes uniform probability distribution over a given range. The models were trained using Adam algorithm with minibatch size 256. Some of these parameters are different from the paper. The user can set some of these parameters using command line arguments which is explained in later sections.
 
-<img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Proposed-Method.jpg" width="800">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Proposed-Method.jpg?raw=True" width="800">
 
 <hr>
 
@@ -35,16 +35,16 @@ The ConvNets have the same organization of layers which can be described as:
 
 (Schematic representation below)
 
-<img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.jpg" width="800">
+<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.jpg?raw=True" width="800">
 
 <hr>
 ## Some Results
 
 FUNDUS Image             |  Magnified Section          | Ground Truth          | Prediction
 :-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
- <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_1.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_2.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_3.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_4.jpg" width="180"> 
- <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_1.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_2.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_3.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_4.jpg" width="180"> 
- <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_1.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_2.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_3.jpg" width="180"> | <img src="https://raw.githubusercontent.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_4.jpg" width="180"> 
+ <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_4.jpg?raw=True" width="180"> 
  
  Note that the 3rd image is not easily visible to the human eye but our network does a good job of recognizing the fine structures.
  
