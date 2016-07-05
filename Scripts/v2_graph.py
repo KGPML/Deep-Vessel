@@ -513,7 +513,7 @@ def run_training():
                 model_save_path = os.path.abspath(model_path+'/model'+MODEL_NAME+'/')
                 if not os.path.exists(model_save_path):
                     os.mkdir(model_save_path)
-                saver.save(sess, model_save_path+'/model.ckpt', global_step=step)
+                saver.save(sess, model_save_path+'/model.ckpt', global_step=step, max_to_keep=0)
                 # Evaluate against the training set.
                 print('Training Data Eval:')
                 train_acc = do_eval(sess, eval_correct, images_placeholder, labels_placeholder, train_data, BATCH_SIZE, keep_prob)
