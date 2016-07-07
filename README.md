@@ -49,7 +49,7 @@ FUNDUS Image             |  Magnified Section          | Ground Truth          |
  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_4.jpg?raw=True" width="180"> 
  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_4.jpg?raw=True" width="180"> 
  
- **Note** that in the 3rd image the blood vessel is not easily visible to the human eye but our network does a good job at discerning the fine structure of the vessel.
+ **Note** that in the 3rd image the blood vessels are not easily visible to the human eye but our network does a good job at discerning the fine structure of the vessel.
 
  The ConvNet efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the ConvNet detects a clinically important condition called [Neovascularization](https://en.wikipedia.org/wiki/Neovascularization) (which we got verified by multiple ophthalmologists) not marked in the ground truth.
 
