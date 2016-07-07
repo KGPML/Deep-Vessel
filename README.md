@@ -37,6 +37,8 @@ The ConvNets have the same organization of layers which can be described as:
 
 <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.jpg?raw=True" width="800">
 
+The system was trained on a machine with 24 CPU cores, 32 GB RAM and Tesla K-20C GPU. Average training time for each model was 3.5 hours (for 10000 epochs). Average inference time for each image was 55 secs on the said machine.
+
 <hr>
 ## Some Results
 
@@ -45,8 +47,13 @@ FUNDUS Image             |  Magnified Section          | Ground Truth          |
  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_4.jpg?raw=True" width="180"> 
  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_4.jpg?raw=True" width="180"> 
  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_4.jpg?raw=True" width="180"> 
  
- Note that the 3rd image is not easily visible to the human eye but our network does a good job of recognizing the fine structures.
+ **Note** that the 3rd image is not easily visible to the human eye but our network does a good job of recognizing the fine structures.
+
+ This capability of our machine to detect fine structures invisible to human eye is further elaborated in the 4th row, where it detects some clinically important conditions not marked in the ground truth.
+
+
  
 <hr>
 <hr>
@@ -224,4 +231,4 @@ The models saved by training the ensemble are saved as checkpoints. This is a si
 <hr>
 ### Acknowledgement
 
-This repository is a TensorFlow re-implementation by [Ankush Chatterjee](https://github.com/Ankush96) of the work done by [Debapriya Maji](https://www.linkedin.com/in/debapriya-maji-a66594102), [Anirban Santara](http://santara.github.io/), [Pabitra Mitra](http://cse.iitkgp.ac.in/~pabitra/) and [Debdoot Sheet](http://www.facweb.iitkgp.ernet.in/~debdoot/). Check out the original paper (http://arxiv.org/abs/1603.04833) for more details.
+This repository is a TensorFlow re-implementation by [Ankush Chatterjee](https://github.com/Ankush96) [during his internship with Anirban and Pabitra Mitra in the summer of 2016] of the work done by [Debapriya Maji](https://www.linkedin.com/in/debapriya-maji-a66594102), [Anirban Santara](http://santara.github.io/), [Pabitra Mitra](http://cse.iitkgp.ac.in/~pabitra/) and [Debdoot Sheet](http://www.facweb.iitkgp.ernet.in/~debdoot/). Check out the original paper (http://arxiv.org/abs/1603.04833) for more details.
