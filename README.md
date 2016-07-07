@@ -37,7 +37,7 @@ The ConvNets have the same organization of layers which can be described as:
 
 <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.jpg?raw=True" width="800">
 
-The system was trained on a machine with 24 CPU cores, 32 GB RAM and Tesla K-20C GPU. Average training time for each model was 3.5 hours (for 10000 epochs). Average inference time for each image was 55 secs on the said machine.
+The system was trained on a machine with dual Intel Xeon E5-2630 v2 CPUs, 32 GB RAM and NVIDIA Tesla K-20C GPU. Average training time for each model was 3.5 hours (for 10000 epochs). Average inference time for each image was 55 secs on the said machine.
 
 <hr>
 ## Some Results
