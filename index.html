@@ -76,6 +76,8 @@ the penultimate affine layer of the different models were sampled respectively f
 
 <p><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.jpg?raw=True" width="800"></p>
 
+<p>The system was trained on a machine with 24 CPU cores, 32 GB RAM and Tesla K-20C GPU. Average training time for each model was 3.5 hours (for 10000 epochs). Average inference time for each image was 55 secs on the said machine.</p>
+
 <hr>
 
 <h2>
@@ -109,10 +111,18 @@ the penultimate affine layer of the different models were sampled respectively f
 <td align="center"><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_3.jpg?raw=True" width="180"></td>
 <td align="center"><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_4.jpg?raw=True" width="180"></td>
 </tr>
+<tr>
+<td align="center"><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_1.jpg?raw=True" width="180"></td>
+<td align="center"><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_2.jpg?raw=True" width="180"></td>
+<td align="center"><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_3.jpg?raw=True" width="180"></td>
+<td align="center"><img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_4.jpg?raw=True" width="180"></td>
+</tr>
 </tbody>
 </table>
 
-<p>Note that the 3rd image is not easily visible to the human eye but our network does a good job of recognizing the fine structures.</p>
+<p><strong>Note</strong> that in the 3rd image the blood vessel is not easily visible to the human eye but our network does a good job at discerning the fine structure of the vessel.</p>
+
+<p>The ConvNet efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the ConvNet detects a clinically important condition called <a href="https://en.wikipedia.org/wiki/Neovascularization">Neovascularization</a> (which we got verified by multiple ophthalmologists) not marked in the ground truth.</p>
 
 <hr>
 
@@ -307,7 +317,7 @@ Options:
 <h3>
 <a id="acknowledgement" class="anchor" href="#acknowledgement" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Acknowledgement</h3>
 
-<p>This repository is a TensorFlow re-implementation by <a href="https://github.com/Ankush96">Ankush Chatterjee</a> of the work done by <a href="https://www.linkedin.com/in/debapriya-maji-a66594102">Debapriya Maji</a>, <a href="http://santara.github.io/">Anirban Santara</a>, <a href="http://cse.iitkgp.ac.in/%7Epabitra/">Pabitra Mitra</a> and <a href="http://www.facweb.iitkgp.ernet.in/%7Edebdoot/">Debdoot Sheet</a>. Check out the original paper (<a href="http://arxiv.org/abs/1603.04833">http://arxiv.org/abs/1603.04833</a>) for more details.</p>
+<p>This repository is a TensorFlow re-implementation by <a href="https://github.com/Ankush96">Ankush Chatterjee</a> [during his internship with <a href="http://santara.github.io/">Anirban Santara</a> and <a href="http://cse.iitkgp.ac.in/%7Epabitra/">Pabitra Mitra</a> in the summer of 2016] of the work done by <a href="https://www.linkedin.com/in/debapriya-maji-a66594102">Debapriya Maji</a>, <a href="http://santara.github.io/">Anirban Santara</a>, <a href="http://cse.iitkgp.ac.in/%7Epabitra/">Pabitra Mitra</a> and <a href="http://www.facweb.iitkgp.ernet.in/%7Edebdoot/">Debdoot Sheet</a>. Check out the original paper (<a href="http://arxiv.org/abs/1603.04833">http://arxiv.org/abs/1603.04833</a>) for more details.</p>
 
       <footer class="site-footer">
         <span class="site-footer-owner"><a href="https://github.com/Ankush96/Deep-Vessel">Deep-vessel</a> is maintained by <a href="https://github.com/Ankush96">Ankush96</a>.</span>
