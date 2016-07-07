@@ -51,7 +51,7 @@ FUNDUS Image             |  Magnified Section          | Ground Truth          |
  
  **Note** that in the 3rd image the blood vessel is not easily visible to the human eye but our network does a good job at discerning the fine structure of the vessel.
 
- The ConvNet efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the ConvNet detects a clinically important condition called Neovascularization (which we got verified by multiple ophthalmologists) not marked in the ground truth.
+ The ConvNet efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the ConvNet detects a clinically important condition called [Neovascularization](https://en.wikipedia.org/wiki/Neovascularization) (which we got verified by multiple ophthalmologists) not marked in the ground truth.
 
 
  
