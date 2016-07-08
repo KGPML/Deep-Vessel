@@ -21,7 +21,7 @@ testing over the DRIVE test set (image id. 1-20).
 
 **Learning mechanism**: Each ConvNet is trained independently on a set of 120000 randomly chosen 3×31×31 patches.
 Learning rate was kept constant across models at 5e − 4. Dropout probability and number of hidden units in
-the penultimate affine layer of the different models were sampled respectively from U ([0.5, 0.9]) and U ({128, 256, 512}) where U(. , .) denotes uniform probability distribution over a given range. The models were trained using Adam algorithm with minibatch size 256. Some of these parameters are different from the paper. The user can set some of these parameters using command line arguments which is explained in later sections.
+the penultimate affine layer of the different models were sampled respectively from U ([0.5, 0.9]) and U ({128, 256, 512}) where U(.) denotes uniform probability distribution over a given range. The models were trained using Adam algorithm with minibatch size 256. Some of these parameters are different from the paper. The user can set some of these parameters using command line arguments which is explained in later sections.
 
 <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Proposed-Method.jpg?raw=True" width="800">
 
