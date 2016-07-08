@@ -1,6 +1,6 @@
 # Ensemble of Deep Convolutional Neural Networks for Learning to Detect Retinal Vessels in Fundus Images
 
-Vision impairment due to pathological damage of the retina can largely be prevented through periodic screening using fundus color imaging. However the challenge with large scale screening is the inability to exhaustively detect fine blood vessels crucial to disease diagnosis. This work presents a computational imaging framework using deep and ensemble learning for reliable detection of blood vessels in fundus color images. An ensemble of deep convolutional neural networks is trained to segment vessel and non-vessel areas of a color fundus image. During inference, the responses of the individual ConvNets of the ensemble are averaged to form the final segmentation. In experimental evaluation with the DRIVE database, we achieve the objective of vessel detection with maximum average accuracy of 91.8% (This accuracy is different from the accuracy reported in the [paper](http://arxiv.org/abs/1603.04833) because of different libraries used)
+Vision impairment due to pathological damage of the retina can largely be prevented through periodic screening using fundus color imaging. However the challenge with large scale screening is the inability to exhaustively detect fine blood vessels crucial to disease diagnosis. This work presents a computational imaging framework using deep and ensemble learning for reliable detection of blood vessels in fundus color images. An ensemble of deep convolutional neural networks is trained to segment vessel and non-vessel areas of a color fundus image. During inference, the responses of the individual ConvNets of the ensemble are averaged to form the final segmentation. In experimental evaluation with the DRIVE database, we achieve the objective of vessel detection with maximum average accuracy of 91.8% (This accuracy is different from the accuracy reported in the [paper](http://arxiv.org/abs/1603.04833) because of different libraries used) and Kappa Score of 0.7031.
 <hr>
 
 FUNDUS Image             |  Manual Segmentation           | Predicted Segmentation
@@ -51,7 +51,7 @@ FUNDUS Image             |  Magnified Section          | Ground Truth          |
  
  **Note** that in the 3rd image the blood vessels are not easily visible to the human eye but our network does a good job at discerning the fine structure of the vessel.
 
- The ConvNet efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the ConvNet detects a clinically important condition called [Neovascularization](https://en.wikipedia.org/wiki/Neovascularization) (which we got verified by multiple ophthalmologists) not marked in the ground truth.
+ The Ensemble of ConvNets efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the Ensemble detects a clinically important condition called [Neovascularization](https://en.wikipedia.org/wiki/Neovascularization) (which we got verified by multiple ophthalmologists) not marked in the ground truth.
 
 
  
