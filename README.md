@@ -1,11 +1,11 @@
 # Ensemble of Deep Convolutional Neural Networks for Learning to Detect Retinal Vessels in Fundus Images
 
-Vision impairment due to pathological damage of the retina can largely be prevented through periodic screening using fundus color imaging. However the challenge with large scale screening is the inability to exhaustively detect fine blood vessels crucial to disease diagnosis. This work presents a computational imaging framework using deep and ensemble learning for reliable detection of blood vessels in fundus color images. An ensemble of deep convolutional neural networks is trained to segment vessel and non-vessel areas of a color fundus image. During inference, the responses of the individual ConvNets of the ensemble are averaged to form the final segmentation. In experimental evaluation with the DRIVE database, we achieve the objective of vessel detection with maximum average accuracy of 91.8% (This accuracy is different from the accuracy reported in the [paper](http://arxiv.org/abs/1603.04833) because of different libraries used)
+Vision impairment due to pathological damage of the retina can largely be prevented through periodic screening using fundus color imaging. However the challenge with large scale screening is the inability to exhaustively detect fine blood vessels crucial to disease diagnosis. This work presents a computational imaging framework using deep and ensemble learning for reliable detection of blood vessels in fundus color images. An ensemble of deep convolutional neural networks is trained to segment vessel and non-vessel areas of a color fundus image. During inference, the responses of the individual ConvNets of the ensemble are averaged to form the final segmentation. In experimental evaluation with the DRIVE database, we achieve the objective of vessel detection with maximum average accuracy of 91.8% (This accuracy is different from the accuracy reported in the [paper](http://arxiv.org/abs/1603.04833) because of different libraries used) and Kappa Score of 0.7031.
 <hr>
 
 FUNDUS Image             |  Manual Segmentation           | Predicted Segmentation
 :-------------------------:|:-------------------------:|:-------------------------:
- <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test_src.jpg?raw=True" width="220"> |  <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_manual1.jpg?raw=True" width="220"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/01_test.jpg?raw=True" width="220">
+ <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/01_test_src.jpg?raw=True" width="220"> |  <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/01_manual1.jpg?raw=True" width="220"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/01_test.jpg?raw=True" width="220">
 
 <hr>
 ## Proposed Method
@@ -21,9 +21,9 @@ testing over the DRIVE test set (image id. 1-20).
 
 **Learning mechanism**: Each ConvNet is trained independently on a set of 120000 randomly chosen 3×31×31 patches.
 Learning rate was kept constant across models at 5e − 4. Dropout probability and number of hidden units in
-the penultimate affine layer of the different models were sampled respectively from U ([0:5; 0:9]) and U ({128; 256; 512}) where U(:) denotes uniform probability distribution over a given range. The models were trained using Adam algorithm with minibatch size 256. Some of these parameters are different from the paper. The user can set some of these parameters using command line arguments which is explained in later sections.
+the penultimate affine layer of the different models were sampled respectively from U ([0.5, 0.9]) and U ({128, 256, 512}) where U(.) denotes uniform probability distribution over a given range. The models were trained using Adam algorithm with minibatch size 256. Some of these parameters are different from the paper. The user can set some of these parameters using command line arguments which is explained in later sections.
 
-<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Proposed-Method.jpg?raw=True" width="800">
+<img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Proposed-Method.jpg?raw=True" width="800">
 
 <hr>
 
@@ -35,7 +35,7 @@ The ConvNets have the same organization of layers which can be described as:
 
 (Schematic representation below)
 
-<img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Architecture.jpg?raw=True" width="800">
+<img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Architecture.jpg?raw=True" width="800">
 
 The system was trained on a machine with dual Intel Xeon E5-2630 v2 CPUs, 32 GB RAM and NVIDIA Tesla K-20C GPU. Average training time for each model was 3.5 hours (for 10000 epochs). Average inference time for each image was 55 secs on the said machine.
 
@@ -44,14 +44,14 @@ The system was trained on a machine with dual Intel Xeon E5-2630 v2 CPUs, 32 GB 
 
 FUNDUS Image             |  Magnified Section          | Ground Truth          | Prediction
 :-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
- <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified1_4.jpg?raw=True" width="180"> 
- <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified2_4.jpg?raw=True" width="180"> 
- <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified3_4.jpg?raw=True" width="180"> 
- <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_1.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_2.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_3.jpg?raw=True" width="180"> | <img src="https://github.com/Ankush96/Deep-Vessel/blob/master/images/Magnified4_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified1_1.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified1_2.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified1_3.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified1_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified2_1.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified2_2.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified2_3.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified2_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified3_1.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified3_2.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified3_3.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified3_4.jpg?raw=True" width="180"> 
+ <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified4_1.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified4_2.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified4_3.jpg?raw=True" width="180"> | <img src="https://github.com/KGPML/Deep-Vessel/blob/master/images/Magnified4_4.jpg?raw=True" width="180"> 
  
  **Note** that in the 3rd image the blood vessels are not easily visible to the human eye but our network does a good job at discerning the fine structure of the vessel.
 
- The ConvNet efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the ConvNet detects a clinically important condition called [Neovascularization](https://en.wikipedia.org/wiki/Neovascularization) (which we got verified by multiple ophthalmologists) not marked in the ground truth.
+ The Ensemble of ConvNets efficiently captures the underlying statistics that govern the degree of vesselness of a point in a color fundus image. This is particularly demonstrated in the 4th row, where the Ensemble detects a clinically important condition called [Neovascularization](https://en.wikipedia.org/wiki/Neovascularization) (which we got verified by multiple ophthalmologists) not marked in the ground truth.
 
 
  
