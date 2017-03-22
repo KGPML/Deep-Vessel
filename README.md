@@ -60,7 +60,7 @@ FUNDUS Image             |  Magnified Section          | Ground Truth          |
 
 ## Setup
 
-Download the DRIVE dataset from [this link](http://www.isi.uu.nl/Research/Databases/DRIVE/). In order to run this code smoothly without having to change the code, please set up the directory tree in a way similar to the tree structure presented below.
+Download the DRIVE dataset from [this link](http://www.uhu.es/retinopathy/muestras/Drive.zip). In order to run this code smoothly without having to change the code, please set up the directory tree in a way similar to the tree structure presented below.
 ```
 Project
 |-- Data
